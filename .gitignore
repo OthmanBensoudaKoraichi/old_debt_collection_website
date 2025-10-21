@@ -1,0 +1,52 @@
+# ─────────────────────────────
+# ENVIRONMENTS & SECRETS
+# ─────────────────────────────
+.env
+.streamlit/secrets.toml
+
+# ─────────────────────────────
+# PYTHON / STREAMLIT FILES
+# ─────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.log
+*.db
+
+# ─────────────────────────────
+# VIRTUAL ENVIRONMENTS
+# ─────────────────────────────
+venv/
+.env/
+.venv/
+env/
+ENV/
+env.bak/
+
+# ─────────────────────────────
+# JUPYTER / NOTEBOOKS
+# ─────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# ─────────────────────────────
+# OS / EDITOR FILES
+# ─────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─────────────────────────────
+# DEPLOYMENT / BUILD FILES
+# ─────────────────────────────
+*.tar
+*.zip
+*.bak
+*.swp
+*.tmp
+*.old
+build/
+dist/
