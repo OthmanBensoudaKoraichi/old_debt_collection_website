@@ -329,7 +329,14 @@ if not total:
     st.stop()
 if current is None:
     st.success("🎉 All cases completed. Great work!")
-    st.stop()
+    st.info("Redirecting to completed cases in 2 seconds...")
+    import time
+    time.sleep(2)
+    # Clear any scroll flags before switching
+    st.session_state.pop("scroll_to_top", None)
+    st.session_state.pop("direct_case_mode", None)
+    st.session_state.pop("direct_case_number", None)
+    st.switch_page("pages/2_cases_completed.py")
 
 case_number = current["case_number"]
 st.sidebar.markdown(f"**Case:** `{case_number}`")
@@ -926,7 +933,7 @@ if (save_draft or save_final):
             case_number,
             annotator_id,
             payload,
-            is_final=save_final  # ✅ only increments version on manual "Save & Submit"
+            is_final=save_final
         )
 
         set_case_progress(case_number, "complete" if save_final else "draft", annotator_id)
@@ -939,9 +946,18 @@ if (save_draft or save_final):
             if nxt:
                 st.session_state["direct_case_mode"] = True
                 st.session_state["direct_case_number"] = nxt["case_number"]
-            # one clean rerun; new case renders at the top naturally
-            st.session_state["scroll_to_top"] = True
-            st.rerun()
+                # one clean rerun; new case renders at the top naturally
+                st.session_state["scroll_to_top"] = True
+                st.rerun()
+            else:
+                # No more cases - redirect to completed page
+                st.success("🎉 All cases completed!")
+                import time
+                time.sleep(1)
+                st.session_state.pop("scroll_to_top", None)
+                st.session_state.pop("direct_case_mode", None)
+                st.session_state.pop("direct_case_number", None)
+                st.switch_page("pages/2_cases_completed.py")
         else:
             st.success("Saved ✅ (draft)")
     except Exception as e:
