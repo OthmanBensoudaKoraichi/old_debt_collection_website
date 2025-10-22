@@ -583,7 +583,7 @@ st.text_input(
 st.markdown("### 6) Exhibits from the declaration substantiate ownership chain")
 
 st.radio(
-    "Do the bills of sale attached in the declaration provide a clear link from the original seller of the debt to the debt buyer plaintiff?",
+    "Do the bills of sale attached in the declaration show that the debt buyer plaintiff is the sole owner of the debt and obtained the debt through a chain of ownership linked to the original seller?",
     YES_NO_UNSURE,
     index=YES_NO_UNSURE.index(dget("ownership_chain_sufficient", "Unclear"))
         if dget("ownership_chain_sufficient") in YES_NO_UNSURE else 2,
