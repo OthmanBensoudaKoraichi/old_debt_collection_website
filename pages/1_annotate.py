@@ -674,7 +674,14 @@ def you_indicated_block():
     )
 
     # 10) debtor info
-    st.markdown("### 10) Defendant name & last known address")
+    alleged_debtor_addr = st.session_state.get(
+        K("alleged_debtor_last_known_address_7"),
+        dget("alleged_debtor_last_known_address_7", "")
+    )
+
+    st.markdown(
+        f"### 10) You indicated that the complaint alleged the defendant’s last known address as `{alleged_debtor_addr or '—'}`."
+    )
     st.radio(
         "Is there an exhibit in the declaration from the charge-off creditor that proves the alleged name and address(es) of the defendant?",
         YES_NO_UNSURE,
