@@ -274,9 +274,22 @@ def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict
     return None
 
 def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[str, Any]):
+    # Get the latest version from training_results_gold to match
+    res = (
+        supabase.table("training_results_gold")
+        .select("version")
+        .eq("case_number", case_number)
+        .eq("annotator_id", annotator_id)
+        .order("version", desc=True)
+        .limit(1)
+        .execute()
+    )
+    latest_version = res.data[0]["version"] if res.data else 1
+    
     row = {
         "case_number": case_number,
         "annotator_id": annotator_id,
+        "version": latest_version,
         "created_at": now_utc_iso_z(),
         **payload,
     }
