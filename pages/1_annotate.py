@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
+from streamlit_scroll_to_top import scroll_to_here
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE SETUP & BASIC GUARDS
@@ -30,35 +32,51 @@ YES_NO_ONLY12_UNSURE = ["Yes", "No", "Only 1–2 owners", "Unclear"]
 # ─────────────────────────────────────────────────────────────────────────────
 def now_utc_iso_z() -> str:
     """
-    Return current UTC time in ISO8601 with 'Z' suffix.
-    Stored in DB as created_at for time tracking + auditing.
+    Current UTC in ISO8601 with 'Z' suffix (timezone-aware; no deprecation warning).
     """
-    return datetime.utcnow().replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 def parse_iso_to_utc(dt_str: str) -> datetime:
     """
-    Parse an ISO8601 string (possibly with 'Z') to a timezone-aware UTC datetime.
-    Defensive against bad inputs; falls back to 'now'.
+    Parse an ISO8601 string (possibly with 'Z' or date-only) to a timezone-aware UTC datetime.
+    Defensive against bad inputs; falls back to 'now' (UTC).
     """
     if not isinstance(dt_str, str):
-        return datetime.utcnow().replace(tzinfo=timezone.utc)
-    s = dt_str.replace("Z", "+00:00")
+        return datetime.now(timezone.utc)
+
+    s = dt_str.strip().replace("Z", "+00:00")
+
+    # Try full datetime first
     try:
         d = datetime.fromisoformat(s)
     except Exception:
-        d = datetime.utcnow()
+        # If it's likely a date-only string like '2024-03-01', append midnight UTC
+        try:
+            d = datetime.fromisoformat(s + "T00:00:00+00:00")
+        except Exception:
+            return datetime.now(timezone.utc)
+
     if d.tzinfo is None:
         d = d.replace(tzinfo=timezone.utc)
     return d.astimezone(timezone.utc)
 
-def fmt_date(d: Any) -> str:
+def fmt_date(d) -> str:
     """
-    Display helper for dates (YYYY-MM-DD) or an em dash if falsy.
+    Display helper for dates as MM/DD/YYYY (US format); em dash if falsy.
+    Accepts ISO strings, date-only strings, or datetime/date objects.
     """
     if not d:
         return "—"
-    s = str(d)
-    return s[:10] if len(s) >= 10 else s
+    try:
+        # Normalize to aware UTC datetime using the parser above
+        if isinstance(d, datetime):
+            dt = d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+        else:
+            dt = parse_iso_to_utc(str(d))
+        return dt.strftime("%m/%d/%Y")
+    except Exception:
+        # Fall back to raw string if something unexpected comes through
+        return str(d)
 
 def fmt_party_list(v: Any) -> str:
     """
@@ -187,27 +205,39 @@ def load_existing_result(case_id: str, annotator_id: str) -> Dict[str, Any]:
     )
     return (res.data[0] if res.data else {}) or {}
 
-def upsert_results_gold(case_id: str, annotator_id: str, payload: Dict[str, Any]):
-    """
-    UPSERT results into training_results_gold keyed by (case_id, annotator_id).
-    Ensures computed time_caselevel is always used, never overwritten by template 0.0.
-    """
-    # Defensive copy
+def upsert_results_gold(case_id: str, annotator_id: str, payload: Dict[str, Any], preserve_nonempty: bool = True):
+    # (Optional) merge protection, keep if you still want autosave not to blank fields
+    prev = load_existing_result(case_id, annotator_id)
+
     row = payload.copy()
+    if preserve_nonempty and prev:
+        for k, v in list(row.items()):
+            if k in {"case_id", "annotator_id", "created_at"}:
+                continue
+            if (v is None) or (isinstance(v, str) and v.strip() == ""):
+                pv = prev.get(k)
+                if pv not in (None, ""):
+                    row[k] = pv
+
     row["case_id"] = case_id
     row["annotator_id"] = annotator_id
     row["created_at"] = now_utc_iso_z()
 
-    supabase.table("training_results_gold").upsert(
-        row,
-        on_conflict="case_id,annotator_id"
-    ).execute()
+    # 1) Try UPDATE first
+    upd = (
+        supabase.table("training_results_gold")
+        .update(row)
+        .eq("case_id", case_id)
+        .eq("annotator_id", annotator_id)
+        .execute()
+    )
+
+    # If no row was updated, INSERT
+    if not upd.data:  # nothing matched
+        supabase.table("training_results_gold").insert(row).execute()
 
 
-    supabase.table("training_results_gold").upsert(
-        row,
-        on_conflict="case_id,annotator_id"
-    ).execute()
+
 
 def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """
@@ -229,6 +259,20 @@ def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict
         if pr != "complete":
             return normalize_case_row(rows[j])
     return None
+
+def insert_fallback_snapshot(case_id: str, annotator_id: str, payload: Dict[str, Any]):
+    row = {
+        "case_id": case_id,
+        "annotator_id": annotator_id,
+        "created_at": now_utc_iso_z(),
+        **payload,
+    }
+    supabase.table("training_results_gold_fallback").insert(row).execute()
+
+# If a previous action asked us to scroll on the next run, do it immediately
+if st.session_state.pop("scroll_to_top", False):
+    # Calling this at the very top will scroll the viewport to the top of the page
+    scroll_to_here(0, key="top")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOAD CURRENT CASE
@@ -354,7 +398,7 @@ st.title("Debt Collection – Gold Label Annotation")
 st.subheader(f"Case: {case_id}")
 
 # 1) RFDJ amounts / complaint
-st.markdown("### Request for Default Judgment and Complaint – Amounts Sought")
+st.markdown("### 1) Request for Default Judgment and Complaint – Amounts Sought")
 st.text_input(
     "What is the dollar amount sought for the demand of the complaint in the request for default judgment?",
     dget("rfdj_demand_amount"), key=K("rfdj_demand_amount")
@@ -387,7 +431,7 @@ st.radio(
 )
 
 # 2) Required allegations (radio + details)
-st.markdown("### Required allegations in the Complaint")
+st.markdown("### 2) Required allegations in the Complaint")
 st.radio(
     "Is the plaintiff a debt buyer  (§ 1788.58(a)(1)) ?",
     YES_NO_UNSURE,
@@ -425,7 +469,7 @@ st.radio(
     horizontal=True, key=K("alleges_last_payment_date_5")
 )
 st.text_input(
-    "If yes, specify the alleged date of last payment",
+    "If yes, specify the alleged date of last payment (MM/DD/YYYY)",
     dget("alleged_last_payment_date_5"), key=K("alleged_last_payment_date_5")
 )
 
@@ -436,7 +480,7 @@ st.radio(
     horizontal=True, key=K("alleges_default_date_5b")
 )
 st.text_input(
-    "If yes, specify the alleged date of default",
+    "If yes, specify the alleged date of default (MM/DD/YYYY)",
     dget("alleged_default_date_5b"), key=K("alleged_default_date_5b")
 )
 
@@ -537,12 +581,26 @@ st.text_input(
 
 # 6) Ownership chain
 st.markdown("### 6) Exhibits from the declaration substantiate ownership chain")
+
 st.radio(
     "Do the bills of sale attached in the declaration provide a clear link from the original seller of the debt to the debt buyer plaintiff?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("ownership_chain_sufficient", "Unclear")) if dget("ownership_chain_sufficient") in YES_NO_UNSURE else 2,
-    horizontal=True, key=K("ownership_chain_sufficient")
+    index=YES_NO_UNSURE.index(dget("ownership_chain_sufficient", "Unclear"))
+        if dget("ownership_chain_sufficient") in YES_NO_UNSURE else 2,
+    horizontal=True,
+    key=K("ownership_chain_sufficient"),
 )
+
+st.radio(
+    "Do all of the bills of sale specify the account number in question?",
+    YES_NO_UNSURE,
+    index=YES_NO_UNSURE.index(dget("ownership_chain_account_match", "Unclear"))
+        if dget("ownership_chain_account_match") in YES_NO_UNSURE else 2,
+    horizontal=True,
+    key=K("ownership_chain_account_match"),
+)
+
+
 st.text_input(
     "Please indicate the document ID and exhibit number where this proof exists... Separate entries with semicolons.",
     dget("ownership_chain_refs"), key=K("ownership_chain_refs")
@@ -592,17 +650,12 @@ def you_indicated_block():
         dget("substantiated_last_payment_ref"), key=K("substantiated_last_payment_ref")
     )
     st.radio(
-        "Does the complaint meet the statute of limitations given the complaint filing date and any substantiated date of a payment made by the defendant? (See the left sidebar)",
+        "Does the complaint meet the statute of limitations (4 years) given the complaint filing date and any substantiated date of a payment made by the defendant? (See the left sidebar)",
         YES_NO_UNSURE,
         index=YES_NO_UNSURE.index(dget("lastpaymentdate_2", "Unclear")) if dget("lastpaymentdate_2") in YES_NO_UNSURE else 2,
         horizontal=True, key=K("lastpaymentdate_2")
     )
-    st.radio(
-        "Does the complaint meet the statute of limitations? I.e., within 4 years of the substantiated date of payment?",
-        YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("sol_within_four_years", "Unclear")) if dget("sol_within_four_years") in YES_NO_UNSURE else 2,
-        horizontal=True, key=K("sol_within_four_years")
-    )
+
 
     # 9) charge-off creditor info
     alleged_co_info = st.session_state.get(K("alleged_chargeoff_creditor_info_6"), dget("alleged_chargeoff_creditor_info_6", ""))
@@ -727,6 +780,7 @@ answers = {
 
     # 6) ownership chain
     "ownership_chain_sufficient": st.session_state.get(K("ownership_chain_sufficient"), "Unclear"),
+    "ownership_chain_account_match": st.session_state.get(K("ownership_chain_account_match"), "Unclear"),
     "ownership_chain_refs": st.session_state.get(K("ownership_chain_refs"), ""),
 
     # 7–11) checks
@@ -737,7 +791,6 @@ answers = {
     "substantiated_last_payment_date": st.session_state.get(K("substantiated_last_payment_date"), ""),
     "substantiated_last_payment_ref": st.session_state.get(K("substantiated_last_payment_ref"), ""),
     "lastpaymentdate_2": st.session_state.get(K("lastpaymentdate_2"), "Unclear"),
-    "sol_within_four_years": st.session_state.get(K("sol_within_four_years"), "Unclear"),
 
     "chargeoffcreditorinfo_1": st.session_state.get(K("chargeoffcreditorinfo_1"), "Unclear"),
     "chargeoff_creditor_ref": st.session_state.get(K("chargeoff_creditor_ref"), ""),
@@ -812,16 +865,18 @@ if (save_draft or save_final):
         set_case_progress(case_id, "complete" if save_final else "draft", annotator_id)
 
         if save_final:
+            insert_fallback_snapshot(case_id, annotator_id, payload)
+            # Pick next case BEFORE rerun
             cases = fetch_cases_for_annotator(annotator_id)
             nxt = get_next_incomplete_or_draft_after(case_id, cases)
             if nxt:
                 st.session_state["direct_case_mode"] = True
                 st.session_state["direct_case_number"] = nxt["case_number"]
-                st.success("Saved ✅ Moving to the next case…")
-                st.rerun()
-            else:
-                st.success("Saved ✅ All assigned cases are complete.")
+            # one clean rerun; new case renders at the top naturally
+            st.session_state["scroll_to_top"] = True
+            st.rerun()
         else:
             st.success("Saved ✅ (draft)")
     except Exception as e:
         st.error(f"Failed to save: {e}")
+
