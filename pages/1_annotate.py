@@ -706,6 +706,33 @@ def you_indicated_block():
         dget("post_charge_off_purchaser_refs"), key=K("post_charge_off_purchaser_refs")
     )
 
+        # 12) Attorneys’ fees
+    fees_amount = st.session_state.get(K("rfdj_attorney_fees_amount")) or ""
+    if fees_amount and fees_amount.strip() not in ("", "0", "0.0"):
+        st.markdown(
+            f"### 12) Attorneys’ fees\n"
+            f"You found that attorney fees were **{fees_amount}**.\n\n"
+            "A plaintiff can only get attorneys’ fees if requested in the prayer of the complaint "
+            "and if the original debt instrument provides for attorneys’ fees in the event of breach. "
+            "Often, plaintiffs will attach a separate declaration to substantiate this."
+        )
+
+        st.radio(
+            "Has the plaintiff either attached a separate Declaration in Support of Request for Attorneys’ Fees "
+            "or included proof within the other declarations (e.g., the 1788 or 585 declaration) that the original debt instrument provided for attorneys’ fees?",
+            YES_NO_UNSURE,
+            index=YES_NO_UNSURE.index(dget("fees_proof_present", "Unclear"))
+                if dget("fees_proof_present") in YES_NO_UNSURE else 2,
+            horizontal=True, key=K("fees_proof_present")
+        )
+
+        st.text_input(
+            "Please indicate the document ID and exhibit number where this proof exists. "
+            "For example: Promissory Note attached in the Declaration, 22IWUD01199_87855599, at 17 (Exhibit A).",
+            dget("fees_proof_ref"), key=K("fees_proof_ref")
+        )
+
+
 you_indicated_block()
 
 # ─────────────────────────────────────────────────────────────────────────────
