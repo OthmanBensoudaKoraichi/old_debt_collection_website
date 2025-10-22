@@ -273,6 +273,7 @@ def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict
             return normalize_case_row(rows[j])
     return None
 
+
 def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[str, Any]):
     # Get the latest version from training_results_gold to match
     res = (
