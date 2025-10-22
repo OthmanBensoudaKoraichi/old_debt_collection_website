@@ -27,7 +27,7 @@ def _fetch_cases_for_annotator(annotator_id: str) -> List[Dict[str, Any]]:
     res = (
         supabase.table("training_cases_gold")
         .select("*")
-        .ilike("annotator", annotator_id)
+        .ilike("annotator_id", annotator_id)
         .execute()
     )
     return res.data or []
@@ -79,7 +79,7 @@ if submitted:
     # Normalize annotator capitalization
     canonical_annotator = None
     for r in rows:
-        val = (r.get("annotator") or "").strip()
+        val = (r.get("annotator_id") or "").strip()
         if val:
             canonical_annotator = val
             break

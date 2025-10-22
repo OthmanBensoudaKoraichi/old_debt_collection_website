@@ -17,8 +17,10 @@ if "supabase" not in st.session_state:
 if "annotator_id" not in st.session_state:
     st.switch_page("app.py")
 
+
 supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
+
 
 direct_mode = st.session_state.get("direct_case_mode", False)
 direct_case_number = st.session_state.get("direct_case_number")
@@ -97,24 +99,24 @@ def normalize_case_row(r: Dict[str, Any]) -> Dict[str, Any]:
         "defendant": r.get("defendant") or [],
         "complaint_filed_date": r.get("complaint_filed_date"),
         "progress": r.get("progress") or "incomplete",
-        "annotator": r.get("annotator"),
+        "annotator_id": r.get("annotator_id"),
     }
 
 def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
     """
-    Load all training cases for a given annotator (lowercase schema).
+    Load all training cases for a given annotator_id (lowercase schema).
     """
     res = (
         supabase.table("training_cases_gold")
         .select("*")
-        .ilike("annotator", annotator)
+        .ilike("annotator_id", annotator_id)
         .order("case_number", desc=False)
         .execute()
     )
     rows = res.data or []
     return [normalize_case_row(r) for r in rows if r.get("case_number")]
 
-def fetch_case_by_number_for_annotator(annotator: str, case_number: str) -> Optional[Dict[str, Any]]:
+def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> Optional[Dict[str, Any]]:
     """
     Load a single case by case_number for the annotator (lowercase schema).
     """
@@ -122,7 +124,7 @@ def fetch_case_by_number_for_annotator(annotator: str, case_number: str) -> Opti
         supabase.table("training_cases_gold")
         .select("*")
         .eq("case_number", case_number)
-        .ilike("annotator", annotator)
+        .ilike("annotator_id", annotator_id)
         .limit(1)
         .execute()
     )
@@ -176,7 +178,7 @@ def fetch_case_pdfs(case_number: str) -> List[Dict[str, str]]:
 def set_case_progress(case_number: str, status: str, annotator: str):
     """
     Update the progress field on training_cases_gold (draft/complete) for THIS annotator only.
-    Scoping by (case_number, annotator) prevents collisions when multiple annotators share a case.
+    Scoping by (case_number, annotator_id) prevents collisions when multiple annotators share a case.
     Non-fatal on error.
     """
     try:
@@ -184,20 +186,20 @@ def set_case_progress(case_number: str, status: str, annotator: str):
             supabase.table("training_cases_gold")
             .update({"progress": status})
             .eq("case_number", case_number)
-            .ilike("annotator", annotator)
+            .ilike("annotator_id", annotator_id)
             .execute()
         )
     except Exception:
         pass
 
-def load_existing_result(case_id: str, annotator_id: str) -> Dict[str, Any]:
+def load_existing_result(case_number: str, annotator_id: str) -> Dict[str, Any]:
     """
-    Load the most recent result row for (case_id, annotator_id) from training_results_gold.
+    Load the most recent result row for (case_number, annotator_id) from training_results_gold.
     """
     res = (
         supabase.table("training_results_gold")
         .select("*")
-        .eq("case_id", case_id)
+        .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
         .order("created_at", desc=True)
         .limit(1)
@@ -205,36 +207,47 @@ def load_existing_result(case_id: str, annotator_id: str) -> Dict[str, Any]:
     )
     return (res.data[0] if res.data else {}) or {}
 
-def upsert_results_gold(case_id: str, annotator_id: str, payload: Dict[str, Any], preserve_nonempty: bool = True):
-    # (Optional) merge protection, keep if you still want autosave not to blank fields
-    prev = load_existing_result(case_id, annotator_id)
 
-    row = payload.copy()
-    if preserve_nonempty and prev:
-        for k, v in list(row.items()):
-            if k in {"case_id", "annotator_id", "created_at"}:
-                continue
-            if (v is None) or (isinstance(v, str) and v.strip() == ""):
-                pv = prev.get(k)
-                if pv not in (None, ""):
-                    row[k] = pv
+def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_final: bool = False):
+    """
+    - Autosave (is_final=False): overwrite existing version (no new version)
+    - Manual resubmit (is_final=True): insert a new version
+    """
 
-    row["case_id"] = case_id
-    row["annotator_id"] = annotator_id
-    row["created_at"] = now_utc_iso_z()
-
-    # 1) Try UPDATE first
-    upd = (
+    # Fetch latest version for this case + annotator
+    res = (
         supabase.table("training_results_gold")
-        .update(row)
-        .eq("case_id", case_id)
+        .select("version")
+        .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
+        .order("version", desc=True)
+        .limit(1)
         .execute()
     )
 
-    # If no row was updated, INSERT
-    if not upd.data:  # nothing matched
+    last_version = res.data[0]["version"] if res.data else 1
+
+    # → Autosave = keep same version
+    # → Manual submit = increment version
+    version_to_use = last_version + 1 if is_final else last_version
+
+    row = payload.copy()
+    row["case_number"] = case_number
+    row["annotator_id"] = annotator_id
+    row["version"] = version_to_use
+    row["created_at"] = now_utc_iso_z()
+
+    if is_final:
+        # Manual resubmit → new version row
         supabase.table("training_results_gold").insert(row).execute()
+    else:
+        # Autosave → overwrite the latest version in place
+        supabase.table("training_results_gold") \
+            .update(row) \
+            .eq("case_number", case_number) \
+            .eq("annotator_id", annotator_id) \
+            .eq("version", last_version) \
+            .execute()
 
 
 
@@ -260,9 +273,9 @@ def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict
             return normalize_case_row(rows[j])
     return None
 
-def insert_fallback_snapshot(case_id: str, annotator_id: str, payload: Dict[str, Any]):
+def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[str, Any]):
     row = {
-        "case_id": case_id,
+        "case_number": case_number,
         "annotator_id": annotator_id,
         "created_at": now_utc_iso_z(),
         **payload,
@@ -304,13 +317,13 @@ if current is None:
     st.success("🎉 All cases completed. Great work!")
     st.stop()
 
-case_id = current["case_number"]
-st.sidebar.markdown(f"**Case:** `{case_id}`")
+case_number = current["case_number"]
+st.sidebar.markdown(f"**Case:** `{case_number}`")
 st.sidebar.markdown("**Plaintiff(s):** " + fmt_party_list(current.get("plaintiff")))
 st.sidebar.markdown("**Defendant(s):** " + fmt_party_list(current.get("defendant")))
 st.sidebar.markdown("**Complaint Filed Date:** " + fmt_date(current.get("complaint_filed_date")))
 
-files = fetch_case_pdfs(case_id)
+files = fetch_case_pdfs(case_number)
 if files:
     st.sidebar.markdown("**Google Drive Documents:**")
     for d in files:
@@ -330,28 +343,28 @@ from datetime import timedelta
 if "case_elapsed_seconds" not in st.session_state:
     st.session_state["case_elapsed_seconds"] = {}
 
-if case_id not in st.session_state["case_elapsed_seconds"]:
+if case_number not in st.session_state["case_elapsed_seconds"]:
     try:
         res = (
             supabase.table("training_results_gold")
             .select("time_caselevel")
-            .eq("case_id", case_id)
+            .eq("case_number", case_number)
             .eq("annotator_id", annotator_id)
             .order("created_at", desc=True)
             .limit(1)
             .execute()
         )
         data = res.data[0] if res.data else None
-        st.session_state["case_elapsed_seconds"][case_id] = float(data["time_caselevel"]) if (data and data.get("time_caselevel")) else 0.0
+        st.session_state["case_elapsed_seconds"][case_number] = float(data["time_caselevel"]) if (data and data.get("time_caselevel")) else 0.0
     except Exception:
-        st.session_state["case_elapsed_seconds"][case_id] = 0.0
+        st.session_state["case_elapsed_seconds"][case_number] = 0.0
 
 # Record the reference "open" time so we can accumulate live seconds
 if "case_open_time" not in st.session_state:
     st.session_state["case_open_time"] = {}
-if case_id not in st.session_state["case_open_time"]:
+if case_number not in st.session_state["case_open_time"]:
     # only set once per session; don't reset on rerun
-    st.session_state["case_open_time"][case_id] = datetime.now(timezone.utc)
+    st.session_state["case_open_time"][case_number] = datetime.now(timezone.utc)
 
 
 with st.sidebar:
@@ -359,8 +372,8 @@ with st.sidebar:
 
     @st.fragment(run_every=1)
     def timer_fragment():
-        base = st.session_state["case_elapsed_seconds"][case_id]
-        opened_at = st.session_state["case_open_time"][case_id]
+        base = st.session_state["case_elapsed_seconds"][case_number]
+        opened_at = st.session_state["case_open_time"][case_number]
         now = datetime.now(timezone.utc)
         elapsed = base + (now - opened_at).total_seconds()
         st.session_state["elapsed_seconds_live"] = elapsed
@@ -375,7 +388,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 # EXISTING ANSWERS + KEY NAMESPACE
 # ─────────────────────────────────────────────────────────────────────────────
-existing = load_existing_result(case_id, annotator_id)
+existing = load_existing_result(case_number, annotator_id)
 
 def dget(k: str, default: Any = "") -> Any:
     """
@@ -389,13 +402,13 @@ def K(name: str) -> str:
     Namespace widget keys per case to avoid collisions across case switches.
     (Session-level isolation already prevents cross-user collisions.)
     """
-    return f"{case_id}::{name}"
+    return f"{case_number}::{name}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LIVE WIDGETS (no form)
 # ─────────────────────────────────────────────────────────────────────────────
 st.title("Debt Collection – Gold Label Annotation")
-st.subheader(f"Case: {case_id}")
+st.subheader(f"Case: {case_number}")
 
 # 1) RFDJ amounts / complaint
 st.markdown("### 1) Request for Default Judgment and Complaint – Amounts Sought")
@@ -844,20 +857,20 @@ answers = {
     "final_notes": st.session_state.get(K("final_notes"), ""),
 
     # identity (added at upsert boundary too)
-    "case_id": case_id,
+    "case_number": case_number,
     "annotator_id": annotator_id,
 }
-st.session_state[f"answers:{case_id}"] = answers  # single source of truth for autosave
+st.session_state[f"answers:{case_number}"] = answers  # single source of truth for autosave
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAYLOAD & AUTOSAVE
 # ─────────────────────────────────────────────────────────────────────────────
 def collect_payload() -> Dict[str, Any]:
-    started_base = st.session_state["case_elapsed_seconds"][case_id]
-    opened_at = st.session_state["case_open_time"][case_id]
+    started_base = st.session_state["case_elapsed_seconds"][case_number]
+    opened_at = st.session_state["case_open_time"][case_number]
     now = datetime.now(timezone.utc)
     elapsed_total = started_base + (now - opened_at).total_seconds()
-    payload = st.session_state.get(f"answers:{case_id}", {}).copy()
+    payload = st.session_state.get(f"answers:{case_number}", {}).copy()
     payload["time_caselevel"] = float(elapsed_total)
     return payload
 
@@ -873,8 +886,8 @@ def autosave_fragment():
     """
     try:
         payload = collect_payload()
-        upsert_results_gold(case_id, annotator_id, payload)
-        set_case_progress(case_id, "draft", annotator_id)
+        upsert_results_gold(case_number, annotator_id, payload)
+        set_case_progress(case_number, "draft", annotator_id)
         st.session_state["last_autosave_time"] = datetime.now().strftime("%H:%M:%S")  # local display
         st.toast(f"💾 Autosaved at {st.session_state['last_autosave_time']}", icon="💾")
     except Exception as e:
@@ -895,14 +908,20 @@ else:
 if (save_draft or save_final):
     try:
         payload = collect_payload()
-        upsert_results_gold(case_id, annotator_id, payload)
-        set_case_progress(case_id, "complete" if save_final else "draft", annotator_id)
+        upsert_results_gold(
+            case_number,
+            annotator_id,
+            payload,
+            is_final=save_final  # ✅ only increments version on manual "Save & Submit"
+        )
+
+        set_case_progress(case_number, "complete" if save_final else "draft", annotator_id)
 
         if save_final:
-            insert_fallback_snapshot(case_id, annotator_id, payload)
+            insert_fallback_snapshot(case_number, annotator_id, payload)
             # Pick next case BEFORE rerun
             cases = fetch_cases_for_annotator(annotator_id)
-            nxt = get_next_incomplete_or_draft_after(case_id, cases)
+            nxt = get_next_incomplete_or_draft_after(case_number, cases)
             if nxt:
                 st.session_state["direct_case_mode"] = True
                 st.session_state["direct_case_number"] = nxt["case_number"]
