@@ -179,18 +179,19 @@ def set_case_progress(case_number: str, status: str, annotator: str):
     """
     Update the progress field on training_cases_gold (draft/complete) for THIS annotator only.
     Scoping by (case_number, annotator_id) prevents collisions when multiple annotators share a case.
-    Non-fatal on error.
     """
     try:
-        (
+        result = (
             supabase.table("training_cases_gold")
             .update({"progress": status})
             .eq("case_number", case_number)
             .ilike("annotator_id", annotator_id)
             .execute()
         )
-    except Exception:
-        pass
+        if not result.data:
+            st.warning(f"Progress update affected 0 rows for case {case_number}")
+    except Exception as e:
+        st.error(f"Failed to update case progress: {e}")
 
 def load_existing_result(case_number: str, annotator_id: str) -> Dict[str, Any]:
     """
@@ -225,11 +226,15 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
         .execute()
     )
 
-    last_version = res.data[0]["version"] if res.data else 1
+    existing_row = res.data[0] if res.data else None
+    last_version = existing_row["version"] if existing_row else 0
 
-    # → Autosave = keep same version
+    # → Autosave = keep same version (or start at 1 if no row exists)
     # → Manual submit = increment version
-    version_to_use = last_version + 1 if is_final else last_version
+    if is_final:
+        version_to_use = last_version + 1
+    else:
+        version_to_use = last_version if last_version > 0 else 1
 
     row = payload.copy()
     row["case_number"] = case_number
@@ -237,17 +242,21 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
     row["version"] = version_to_use
     row["created_at"] = now_utc_iso_z()
 
-    if is_final:
-        # Manual resubmit → new version row
+    if is_final or not existing_row:
+        # Manual resubmit OR first-time save → insert new row
         supabase.table("training_results_gold").insert(row).execute()
     else:
-        # Autosave → overwrite the latest version in place
-        supabase.table("training_results_gold") \
+        # Autosave on existing row → update in place
+        result = supabase.table("training_results_gold") \
             .update(row) \
             .eq("case_number", case_number) \
             .eq("annotator_id", annotator_id) \
             .eq("version", last_version) \
             .execute()
+        
+        # Fallback: if update affected 0 rows, insert instead
+        if not result.data:
+            supabase.table("training_results_gold").insert(row).execute()
 
 
 
