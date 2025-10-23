@@ -684,7 +684,7 @@ def you_indicated_block():
         dget("substantiated_last_payment_ref"), key=K("substantiated_last_payment_ref")
     )
     st.radio(
-        "Does the complaint meet the statute of limitations (4 years) given the complaint filing date and any substantiated date of a payment made by the defendant? (See the left sidebar)",
+        "Does the complaint meet the statute of limitations (4 years) given the complaint filing date (see the left sidebar) and any substantiated date of default or date of a payment made by the defendant ?",
         YES_NO_UNSURE,
         index=YES_NO_UNSURE.index(dget("lastpaymentdate_2", "Unclear")) if dget("lastpaymentdate_2") in YES_NO_UNSURE else 2,
         horizontal=True, key=K("lastpaymentdate_2")
