@@ -512,7 +512,7 @@ st.text_input(
 )
 
 st.radio(
-    "Does the complaint allege the date of default (§ 1788.58(a)(5))?",
+    "If the complaint has not alleged a date of last payment, has it alleged a date of default (§ 1788.58(a)(5))?",
     YES_NO_UNSURE,
     index=YES_NO_UNSURE.index(dget("alleges_default_date_5b", "Unclear")) if dget("alleges_default_date_5b") in YES_NO_UNSURE else 2,
     horizontal=True, key=K("alleges_default_date_5b")
