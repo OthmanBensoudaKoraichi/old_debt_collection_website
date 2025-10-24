@@ -104,10 +104,10 @@ def normalize_case_row(r: Dict[str, Any]) -> Dict[str, Any]:
 
 def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
     """
-    Load all training cases for a given annotator_id (lowercase schema).
+    Load all cases for a given annotator_id (lowercase schema).
     """
     res = (
-        supabase.table("training_cases_gold")
+        supabase.table("cases_gold")
         .select("*")
         .ilike("annotator_id", annotator_id)
         .order("case_number", desc=False)
@@ -121,7 +121,7 @@ def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> O
     Load a single case by case_number for the annotator (lowercase schema).
     """
     res = (
-        supabase.table("training_cases_gold")
+        supabase.table("cases_gold")
         .select("*")
         .eq("case_number", case_number)
         .ilike("annotator_id", annotator_id)
@@ -177,12 +177,12 @@ def fetch_case_pdfs(case_number: str) -> List[Dict[str, str]]:
 
 def set_case_progress(case_number: str, status: str, annotator: str):
     """
-    Update the progress field on training_cases_gold (draft/complete) for THIS annotator only.
+    Update the progress field on cases_gold (draft/complete) for THIS annotator only.
     Scoping by (case_number, annotator_id) prevents collisions when multiple annotators share a case.
     """
     try:
         result = (
-            supabase.table("training_cases_gold")
+            supabase.table("cases_gold")
             .update({"progress": status})
             .eq("case_number", case_number)
             .ilike("annotator_id", annotator_id)
@@ -195,10 +195,10 @@ def set_case_progress(case_number: str, status: str, annotator: str):
 
 def load_existing_result(case_number: str, annotator_id: str) -> Dict[str, Any]:
     """
-    Load the most recent result row for (case_number, annotator_id) from training_results_gold.
+    Load the most recent result row for (case_number, annotator_id) from results_gold.
     """
     res = (
-        supabase.table("training_results_gold")
+        supabase.table("results_gold")
         .select("*")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
@@ -217,7 +217,7 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
 
     # Fetch latest version for this case + annotator
     res = (
-        supabase.table("training_results_gold")
+        supabase.table("results_gold")
         .select("version")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
@@ -244,10 +244,10 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
 
     if is_final or not existing_row:
         # Manual resubmit OR first-time save → insert new row
-        supabase.table("training_results_gold").insert(row).execute()
+        supabase.table("results_gold").insert(row).execute()
     else:
         # Autosave on existing row → update in place
-        result = supabase.table("training_results_gold") \
+        result = supabase.table("results_gold") \
             .update(row) \
             .eq("case_number", case_number) \
             .eq("annotator_id", annotator_id) \
@@ -256,7 +256,7 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
         
         # Fallback: if update affected 0 rows, insert instead
         if not result.data:
-            supabase.table("training_results_gold").insert(row).execute()
+            supabase.table("results_gold").insert(row).execute()
 
 
 
@@ -284,9 +284,9 @@ def get_next_incomplete_or_draft_after(current_case_number: str, rows: List[Dict
 
 
 def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[str, Any]):
-    # Get the latest version from training_results_gold to match
+    # Get the latest version from results_gold to match
     res = (
-        supabase.table("training_results_gold")
+        supabase.table("results_gold")
         .select("version")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
@@ -303,7 +303,7 @@ def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[
         "created_at": now_utc_iso_z(),
         **payload,
     }
-    supabase.table("training_results_gold_fallback").insert(row).execute()
+    supabase.table("results_gold_fallback").insert(row).execute()
 
 # If a previous action asked us to scroll on the next run, do it immediately
 if st.session_state.pop("scroll_to_top", False):
@@ -376,7 +376,7 @@ if "case_elapsed_seconds" not in st.session_state:
 if case_number not in st.session_state["case_elapsed_seconds"]:
     try:
         res = (
-            supabase.table("training_results_gold")
+            supabase.table("results_gold")
             .select("time_caselevel")
             .eq("case_number", case_number)
             .eq("annotator_id", annotator_id)
@@ -910,7 +910,7 @@ def collect_payload() -> Dict[str, Any]:
 def autosave_fragment():
     """
     Every 10s:
-    - upsert results to training_results_gold
+    - upsert results to results_gold
     - mark case as draft (scoped by annotator to avoid collisions)
     - show toast on success/failure
     """

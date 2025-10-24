@@ -25,7 +25,7 @@ st.title("Debt Collection – Gold Label Annotation")
 def _fetch_cases_for_annotator(annotator_id: str) -> List[Dict[str, Any]]:
     """Fetch all cases assigned to this annotator from cases_gold."""
     res = (
-        supabase.table("training_cases_gold")
+        supabase.table("cases_gold")
         .select("*")
         .ilike("annotator_id", annotator_id)
         .execute()
