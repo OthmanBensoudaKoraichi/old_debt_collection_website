@@ -477,13 +477,13 @@ st.radio(
     horizontal=True, key=K("allegation_debt_buyer_1")
 )
 st.radio(
-    "Is there a short and plain statement alleging the nature of the debt (§ 1788.58(a)(2))?",
+    "Has the plaintiff alleged that there is a short and plain statement alleging the nature of the debt (§ 1788.58(a)(2))?",
     YES_NO_UNSURE,
     index=YES_NO_UNSURE.index(dget("allegation_nature_of_debt_2", "Unclear")) if dget("allegation_nature_of_debt_2") in YES_NO_UNSURE else 2,
     horizontal=True, key=K("allegation_nature_of_debt_2")
 )
 st.radio(
-    "Is the debt buyer the sole owner of the debt at issue, or has authority to assert the rights of all owners of the debt (§ 1788.58(a)(3))?",
+    "Has the plaintiff alleged that the debt buyer the sole owner of the debt at issue, or has authority to assert the rights of all owners of the debt (§ 1788.58(a)(3))?",
     YES_NO_UNSURE,
     index=YES_NO_UNSURE.index(dget("allegation_sole_owner_3", "Unclear")) if dget("allegation_sole_owner_3") in YES_NO_UNSURE else 2,
     horizontal=True, key=K("allegation_sole_owner_3")
