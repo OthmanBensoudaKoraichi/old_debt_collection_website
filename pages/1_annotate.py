@@ -732,7 +732,7 @@ def you_indicated_block():
         horizontal=True, key=K("debtorinfo_1")
     )
     st.text_input(
-        "Please indicate the document ID and exhibit number where this proof exists.",
+        "Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in the Declaration, 22IWUD01199_87855599, at 17 (Exhibit A)).",
         dget("debtor_info_ref"), key=K("debtor_info_ref")
     )
 
