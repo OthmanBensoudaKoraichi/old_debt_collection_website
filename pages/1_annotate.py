@@ -471,7 +471,7 @@ st.radio(
 # 2) Required allegations (radio + details)
 st.markdown("### 2) Required allegations in the Complaint")
 st.radio(
-    "Is the plaintiff a debt buyer  (§ 1788.58(a)(1)) ?",
+    "Has the plaintiff alleged that they are a debt buyer  (§ 1788.58(a)(1)) ?",
     YES_NO_UNSURE,
     index=YES_NO_UNSURE.index(dget("allegation_debt_buyer_1", "Unclear")) if dget("allegation_debt_buyer_1") in YES_NO_UNSURE else 2,
     horizontal=True, key=K("allegation_debt_buyer_1")
