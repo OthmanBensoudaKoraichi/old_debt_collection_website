@@ -457,14 +457,14 @@ st.text_input(
 st.radio(
     "Does the complaint include a prayer section?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("complaint_has_prayer", "Unclear")) if dget("complaint_has_prayer") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("complaint_has_prayer")
 )
 
 st.radio(
     'The dollar amounts sought in the request for default judgment for the "demand of the complaint" and "interest" must be equal to or less than those sought in the prayer of the complaint. If the request for default judgment includes any non-zero "costs" or "attorney fees," then the prayer of the complaint must also request costs of suit or attorney fees, respectively. However, a specific dollar amount is not required in the prayer of the complaint for the cost of suit and attorney fees.',
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("rfdjamount_1", "Unclear")) if dget("rfdjamount_1") in YES_NO_UNSURE else 2,
+    index=None,
     horizontal=True, key=K("rfdjamount_1")
 )
 
@@ -473,26 +473,26 @@ st.markdown("### 2) Required allegations in the Complaint")
 st.radio(
     "Has the plaintiff alleged that they are a debt buyer  (§ 1788.58(a)(1)) ?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("allegation_debt_buyer_1", "Unclear")) if dget("allegation_debt_buyer_1") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("allegation_debt_buyer_1")
 )
 st.radio(
     "Has the plaintiff alleged that there is a short and plain statement alleging the nature of the debt (§ 1788.58(a)(2))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("allegation_nature_of_debt_2", "Unclear")) if dget("allegation_nature_of_debt_2") in YES_NO_UNSURE else 2,
+    index= None ,
     horizontal=True, key=K("allegation_nature_of_debt_2")
 )
 st.radio(
     "Has the plaintiff alleged that the debt buyer the sole owner of the debt at issue, or has authority to assert the rights of all owners of the debt (§ 1788.58(a)(3))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("allegation_sole_owner_3", "Unclear")) if dget("allegation_sole_owner_3") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("allegation_sole_owner_3")
 )
 
 st.radio(
     "Does the complaint allege the debt balance at charge-off (§ 1788.58(a)(4))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_chargeoff_balance_4", "Unclear")) if dget("alleges_chargeoff_balance_4") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_chargeoff_balance_4")
 )
 st.text_input(
@@ -503,7 +503,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the date of last payment (§ 1788.58(a)(5))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_last_payment_date_5", "Unclear")) if dget("alleges_last_payment_date_5") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_last_payment_date_5")
 )
 st.text_input(
@@ -514,7 +514,7 @@ st.text_input(
 st.radio(
     "If the complaint has not alleged a date of last payment, has it alleged a date of default (§ 1788.58(a)(5))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_default_date_5b", "Unclear")) if dget("alleges_default_date_5b") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_default_date_5b")
 )
 st.text_input(
@@ -525,7 +525,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the name and address of the charge-off creditor (§ 1788.58(a)(6))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_chargeoff_creditor_info_6", "Unclear")) if dget("alleges_chargeoff_creditor_info_6") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_chargeoff_creditor_info_6")
 )
 st.text_input(
@@ -536,7 +536,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the debtor’s last known address (§ 1788.58(a)(7))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_debtor_last_known_address_7", "Unclear")) if dget("alleges_debtor_last_known_address_7") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_debtor_last_known_address_7")
 )
 st.text_input(
@@ -547,7 +547,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the names of all post-charge-off purchasers (§ 1788.58(a)(8))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("alleges_postchargeoffpurchaserinfo_0", "Unclear")) if dget("alleges_postchargeoffpurchaserinfo_0") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("alleges_postchargeoffpurchaserinfo_0")
 )
 st.text_input(
@@ -558,7 +558,7 @@ st.text_input(
 st.radio(
     "Does the plaintiff allege that they complied with Section 1788.52?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("allegation_1788_52_compliance", "Unclear")) if dget("allegation_1788_52_compliance") in YES_NO_UNSURE else 2,
+    index= None ,
     horizontal=True, key=K("allegation_1788_52_compliance")
 )
 
@@ -567,7 +567,7 @@ st.markdown("### 3) Debtor’s agreement to the debt in the Complaint")
 st.radio(
     "Is there a contract or credit statement (with a payment or purchase transaction) proving the defendant's agreement to the debt in the exhibits attached to the Complaint?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("hascontractorlaststatement_0", "Unclear")) if dget("hascontractorlaststatement_0") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("hascontractorlaststatement_0")
 )
 st.text_input(
@@ -580,13 +580,13 @@ st.markdown("### 4) Sworn 1788/585 declaration")
 st.radio(
     "Is there a sworn declaration document filed in support of the request for default judgment (CA Civil Code § 1788.60 (a))?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("hasSignedSworn1788.60_0", "Unclear")) if dget("hasSignedSworn1788.60_0") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("hasSignedSworn1788.60_0")
 )
 st.radio(
     "Please indicate whether a declaration exists from the plaintiff or someone who works for the plaintiff that satisfies the personal knowledge requirement of the records in possession of the plaintiff.",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("declaration_pkm_present", "Unclear")) if dget("declaration_pkm_present") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("declaration_pkm_present")
 )
 st.text_input(
@@ -596,7 +596,7 @@ st.text_input(
 st.radio(
     "If the debt buyer is the third or later in the chain of title, do declarations exist establishing personal knowledge of the business records of all debt buyers?",
     YES_NO_ONLY12_UNSURE,
-    index=YES_NO_ONLY12_UNSURE.index(dget("declaration_prior_buyers_pkm", "Unclear")) if dget("declaration_prior_buyers_pkm") in YES_NO_ONLY12_UNSURE else 3,
+    index= None,
     horizontal=True, key=K("declaration_prior_buyers_pkm")
 )
 st.text_input(
@@ -609,7 +609,7 @@ st.markdown("### 5) Debtor’s agreement to the debt in the declaration")
 st.radio(
     "Is there a contract or credit statement (with a payment or purchase transaction) proving the defendant's agreement to the debt in the exhibits attached to the declaration?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("declaration_has_agreement_proof", "Unclear")) if dget("declaration_has_agreement_proof") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True, key=K("declaration_has_agreement_proof")
 )
 st.text_input(
@@ -623,8 +623,7 @@ st.markdown("### 6) Exhibits from the declaration substantiate ownership chain")
 st.radio(
     "Do the bills of sale attached in the declaration show that the debt buyer plaintiff is the sole owner of the debt and obtained the debt through a chain of ownership linked to the original seller?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("ownership_chain_sufficient", "Unclear"))
-        if dget("ownership_chain_sufficient") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True,
     key=K("ownership_chain_sufficient"),
 )
@@ -632,8 +631,7 @@ st.radio(
 st.radio(
     "Do all of the bills of sale specify the account number in question?",
     YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("ownership_chain_account_match", "Unclear"))
-        if dget("ownership_chain_account_match") in YES_NO_UNSURE else 2,
+    index= None,
     horizontal=True,
     key=K("ownership_chain_account_match"),
 )
@@ -660,7 +658,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that proves the debt balance at charge-off alleged in the complaint (CA Civil Code § 1788.58 (a)(4))?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("haschargeoffbalance_1", "Unclear")) if dget("haschargeoffbalance_1") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("haschargeoffbalance_1")
     )
     st.text_input(
@@ -681,7 +679,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that substantiates the date of the defendant's last payment (or the date of default if no last payment) alleged in the complaint (CA Civil Code § 1788.58 (a)(5))?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("lastpaymentdate_1", "Unclear")) if dget("lastpaymentdate_1") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("lastpaymentdate_1")
     )
     st.text_input(
@@ -695,7 +693,7 @@ def you_indicated_block():
     st.radio(
         "Does the complaint meet the statute of limitations (4 years) given the complaint filing date (see the left sidebar) and any substantiated date of default or date of a payment made by the defendant ?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("lastpaymentdate_2", "Unclear")) if dget("lastpaymentdate_2") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("lastpaymentdate_2")
     )
 
@@ -708,7 +706,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that proves the alleged name and address of the charge-off creditor?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("chargeoffcreditorinfo_1", "Unclear")) if dget("chargeoffcreditorinfo_1") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("chargeoffcreditorinfo_1")
     )
     st.text_input(
@@ -728,7 +726,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration from the charge-off creditor that proves the alleged name and address(es) of the defendant?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("debtorinfo_1", "Unclear")) if dget("debtorinfo_1") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("debtorinfo_1")
     )
     st.text_input(
@@ -741,7 +739,7 @@ def you_indicated_block():
     st.radio(
         "Are there bills of sale or some transfer record in the exhibits of the declaration for each alleged owner of the debt (CA Civil Code § 1788.58 (a)(8))?",
         YES_NO_UNSURE,
-        index=YES_NO_UNSURE.index(dget("postchargeoffpurchaserinfo_1", "Unclear")) if dget("postchargeoffpurchaserinfo_1") in YES_NO_UNSURE else 2,
+        index= None,
         horizontal=True, key=K("postchargeoffpurchaserinfo_1")
     )
     st.text_input(
@@ -764,8 +762,7 @@ def you_indicated_block():
             "Has the plaintiff either attached a separate Declaration in Support of Request for Attorneys’ Fees "
             "or included proof within the other declarations (e.g., the 1788 or 585 declaration) that the original debt instrument provided for attorneys’ fees?",
             YES_NO_UNSURE,
-            index=YES_NO_UNSURE.index(dget("fees_proof_present", "Unclear"))
-                if dget("fees_proof_present") in YES_NO_UNSURE else 2,
+            index= None,
             horizontal=True, key=K("fees_proof_present")
         )
 
@@ -786,8 +783,7 @@ st.caption("No automatic suggestion. Make your own determination based on the ev
 st.radio(
     "Your recommendation",
     ["Grant", "Reject – Major", "Reject – Minor", "Undecided"],
-    index=(["Grant", "Reject – Major", "Reject – Minor", "Undecided"].index(dget("final_recommendation"))
-           if dget("final_recommendation") in ["Grant", "Reject – Major", "Reject – Minor", "Undecided"] else 3),
+    index= None,
     horizontal=True,
     key=K("final_recommendation"),
 )
