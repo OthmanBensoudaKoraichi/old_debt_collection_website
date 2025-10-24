@@ -590,7 +590,7 @@ st.radio(
     horizontal=True, key=K("declaration_pkm_present")
 )
 st.text_input(
-    "Please indicate which number this plaintiff debt buyer is in the chain of title...",
+    "Please indicate which number this plaintiff debt buyer is in the chain of title, as evidenced by the exhibits attached to the declaration. The first debt buyer would be the second in the chain of title, as the original seller of the debt would be the first.",
     dget("chain_position_number"), key=K("chain_position_number")
 )
 st.radio(
