@@ -457,14 +457,15 @@ st.text_input(
 st.radio(
     "Does the complaint include a prayer section?",
     YES_NO_UNSURE,
-    index= None,
-    horizontal=True, key=K("complaint_has_prayer")
+    index=YES_NO_UNSURE.index(dget("complaint_has_prayer")) if dget("complaint_has_prayer") in YES_NO_UNSURE else None,
+    horizontal=True,
+    key=K("complaint_has_prayer"),
 )
 
 st.radio(
     'The dollar amounts sought in the request for default judgment for the "demand of the complaint" and "interest" must be equal to or less than those sought in the prayer of the complaint. If the request for default judgment includes any non-zero "costs" or "attorney fees," then the prayer of the complaint must also request costs of suit or attorney fees, respectively. However, a specific dollar amount is not required in the prayer of the complaint for the cost of suit and attorney fees.',
     YES_NO_UNSURE,
-    index=None,
+    index=YES_NO_UNSURE.index(dget("rfdjamount_1")) if dget("rfdjamount_1") in YES_NO_UNSURE else None,
     horizontal=True, key=K("rfdjamount_1")
 )
 
@@ -473,26 +474,26 @@ st.markdown("### 2) Required allegations in the Complaint")
 st.radio(
     "Has the plaintiff alleged that they are a debt buyer  (§ 1788.58(a)(1)) ?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("allegation_debt_buyer_1")) if dget("allegation_debt_buyer_1") in YES_NO_UNSURE else None,
     horizontal=True, key=K("allegation_debt_buyer_1")
 )
 st.radio(
     "Has the plaintiff alleged that there is a short and plain statement alleging the nature of the debt (§ 1788.58(a)(2))?",
     YES_NO_UNSURE,
-    index= None ,
+    index=YES_NO_UNSURE.index(dget("allegation_nature_of_debt_2")) if dget("allegation_nature_of_debt_2") in YES_NO_UNSURE else None,
     horizontal=True, key=K("allegation_nature_of_debt_2")
 )
 st.radio(
     "Has the plaintiff alleged that the debt buyer the sole owner of the debt at issue, or has authority to assert the rights of all owners of the debt (§ 1788.58(a)(3))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("allegation_sole_owner_3")) if dget("allegation_sole_owner_3") in YES_NO_UNSURE else None,
     horizontal=True, key=K("allegation_sole_owner_3")
 )
 
 st.radio(
     "Does the complaint allege the debt balance at charge-off (§ 1788.58(a)(4))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_chargeoff_balance_4")) if dget("alleges_chargeoff_balance_4") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_chargeoff_balance_4")
 )
 st.text_input(
@@ -503,7 +504,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the date of last payment (§ 1788.58(a)(5))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_last_payment_date_5")) if dget("alleges_last_payment_date_5") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_last_payment_date_5")
 )
 st.text_input(
@@ -514,7 +515,7 @@ st.text_input(
 st.radio(
     "If the complaint has not alleged a date of last payment, has it alleged a date of default (§ 1788.58(a)(5))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_default_date_5b")) if dget("alleges_default_date_5b") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_default_date_5b")
 )
 st.text_input(
@@ -525,7 +526,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the name and address of the charge-off creditor (§ 1788.58(a)(6))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_chargeoff_creditor_info_6")) if dget("alleges_chargeoff_creditor_info_6") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_chargeoff_creditor_info_6")
 )
 st.text_input(
@@ -536,7 +537,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the debtor’s last known address (§ 1788.58(a)(7))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_debtor_last_known_address_7")) if dget("alleges_debtor_last_known_address_7") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_debtor_last_known_address_7")
 )
 st.text_input(
@@ -547,7 +548,7 @@ st.text_input(
 st.radio(
     "Does the complaint allege the names of all post-charge-off purchasers (§ 1788.58(a)(8))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("alleges_postchargeoffpurchaserinfo_0")) if dget("alleges_postchargeoffpurchaserinfo_0") in YES_NO_UNSURE else None,
     horizontal=True, key=K("alleges_postchargeoffpurchaserinfo_0")
 )
 st.text_input(
@@ -558,7 +559,7 @@ st.text_input(
 st.radio(
     "Does the plaintiff allege that they complied with Section 1788.52?",
     YES_NO_UNSURE,
-    index= None ,
+    index=YES_NO_UNSURE.index(dget("allegation_1788_52_compliance")) if dget("allegation_1788_52_compliance") in YES_NO_UNSURE else None,
     horizontal=True, key=K("allegation_1788_52_compliance")
 )
 
@@ -567,7 +568,7 @@ st.markdown("### 3) Debtor’s agreement to the debt in the Complaint")
 st.radio(
     "Is there a contract or credit statement (with a payment or purchase transaction) proving the defendant's agreement to the debt in the exhibits attached to the Complaint?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("hascontractorlaststatement_0")) if dget("hascontractorlaststatement_0") in YES_NO_UNSURE else None,
     horizontal=True, key=K("hascontractorlaststatement_0")
 )
 st.text_input(
@@ -580,13 +581,13 @@ st.markdown("### 4) Sworn 1788/585 declaration")
 st.radio(
     "Is there a sworn declaration document filed in support of the request for default judgment (CA Civil Code § 1788.60 (a))?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("hasSignedSworn1788.60_0")) if dget("hasSignedSworn1788.60_0") in YES_NO_UNSURE else None,
     horizontal=True, key=K("hasSignedSworn1788.60_0")
 )
 st.radio(
     "Please indicate whether a declaration exists from the plaintiff or someone who works for the plaintiff that satisfies the personal knowledge requirement of the records in possession of the plaintiff.",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("declaration_pkm_present")) if dget("declaration_pkm_present") in YES_NO_UNSURE else None,
     horizontal=True, key=K("declaration_pkm_present")
 )
 st.text_input(
@@ -596,7 +597,7 @@ st.text_input(
 st.radio(
     "If the debt buyer is the third or later in the chain of title, do declarations exist establishing personal knowledge of the business records of all debt buyers?",
     YES_NO_ONLY12_UNSURE,
-    index= None,
+    index=YES_NO_ONLY12_UNSURE.index(dget("declaration_prior_buyers_pkm")) if dget("declaration_prior_buyers_pkm") in YES_NO_ONLY12_UNSURE else None,
     horizontal=True, key=K("declaration_prior_buyers_pkm")
 )
 st.text_input(
@@ -609,7 +610,7 @@ st.markdown("### 5) Debtor’s agreement to the debt in the declaration")
 st.radio(
     "Is there a contract or credit statement (with a payment or purchase transaction) proving the defendant's agreement to the debt in the exhibits attached to the declaration?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("declaration_has_agreement_proof")) if dget("declaration_has_agreement_proof") in YES_NO_UNSURE else None,
     horizontal=True, key=K("declaration_has_agreement_proof")
 )
 st.text_input(
@@ -623,7 +624,8 @@ st.markdown("### 6) Exhibits from the declaration substantiate ownership chain")
 st.radio(
     "Do the bills of sale attached in the declaration show that the debt buyer plaintiff is the sole owner of the debt and obtained the debt through a chain of ownership linked to the original seller?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("ownership_chain_sufficient"))
+        if dget("ownership_chain_sufficient") in YES_NO_UNSURE else None,
     horizontal=True,
     key=K("ownership_chain_sufficient"),
 )
@@ -631,7 +633,8 @@ st.radio(
 st.radio(
     "Do all of the bills of sale specify the account number in question?",
     YES_NO_UNSURE,
-    index= None,
+    index=YES_NO_UNSURE.index(dget("ownership_chain_account_match"))
+        if dget("ownership_chain_account_match") in YES_NO_UNSURE else None,
     horizontal=True,
     key=K("ownership_chain_account_match"),
 )
@@ -658,7 +661,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that proves the debt balance at charge-off alleged in the complaint (CA Civil Code § 1788.58 (a)(4))?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("haschargeoffbalance_1")) if dget("haschargeoffbalance_1") in YES_NO_UNSURE else None,
         horizontal=True, key=K("haschargeoffbalance_1")
     )
     st.text_input(
@@ -679,7 +682,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that substantiates the date of the defendant's last payment (or the date of default if no last payment) alleged in the complaint (CA Civil Code § 1788.58 (a)(5))?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("lastpaymentdate_1")) if dget("lastpaymentdate_1") in YES_NO_UNSURE else None,
         horizontal=True, key=K("lastpaymentdate_1")
     )
     st.text_input(
@@ -693,7 +696,7 @@ def you_indicated_block():
     st.radio(
         "Does the complaint meet the statute of limitations (4 years) given the complaint filing date (see the left sidebar) and any substantiated date of default or date of a payment made by the defendant ?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("lastpaymentdate_2")) if dget("lastpaymentdate_2") in YES_NO_UNSURE else None,
         horizontal=True, key=K("lastpaymentdate_2")
     )
 
@@ -706,7 +709,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration that proves the alleged name and address of the charge-off creditor?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("chargeoffcreditorinfo_1", "Unclear")) if dget("chargeoffcreditorinfo_1") in YES_NO_UNSURE else 2,
         horizontal=True, key=K("chargeoffcreditorinfo_1")
     )
     st.text_input(
@@ -726,7 +729,7 @@ def you_indicated_block():
     st.radio(
         "Is there an exhibit in the declaration from the charge-off creditor that proves the alleged name and address(es) of the defendant?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("debtorinfo_1")) if dget("debtorinfo_1") in YES_NO_UNSURE else None,
         horizontal=True, key=K("debtorinfo_1")
     )
     st.text_input(
@@ -739,7 +742,7 @@ def you_indicated_block():
     st.radio(
         "Are there bills of sale or some transfer record in the exhibits of the declaration for each alleged owner of the debt (CA Civil Code § 1788.58 (a)(8))?",
         YES_NO_UNSURE,
-        index= None,
+        index=YES_NO_UNSURE.index(dget("postchargeoffpurchaserinfo_1")) if dget("postchargeoffpurchaserinfo_1") in YES_NO_UNSURE else None,
         horizontal=True, key=K("postchargeoffpurchaserinfo_1")
     )
     st.text_input(
@@ -762,7 +765,8 @@ def you_indicated_block():
             "Has the plaintiff either attached a separate Declaration in Support of Request for Attorneys’ Fees "
             "or included proof within the other declarations (e.g., the 1788 or 585 declaration) that the original debt instrument provided for attorneys’ fees?",
             YES_NO_UNSURE,
-            index= None,
+            index=YES_NO_UNSURE.index(dget("fees_proof_present"))
+                if dget("fees_proof_present") in YES_NO_UNSURE else None,
             horizontal=True, key=K("fees_proof_present")
         )
 
@@ -780,10 +784,13 @@ you_indicated_block()
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("### Final Recommendation")
 st.caption("No automatic suggestion. Make your own determination based on the evidence above.")
+REC_OPTIONS = ["Grant", "Reject – Major", "Reject – Minor", "Undecided"]
+
 st.radio(
     "Your recommendation",
-    ["Grant", "Reject – Major", "Reject – Minor", "Undecided"],
-    index= None,
+    REC_OPTIONS,
+    index=(REC_OPTIONS.index(dget("final_recommendation"))
+           if dget("final_recommendation") in REC_OPTIONS else None),
     horizontal=True,
     key=K("final_recommendation"),
 )
@@ -800,92 +807,92 @@ save_final = c2.button("✅ Save & Mark Complete", type="primary", use_container
 # STASH ANSWERS FOR AUTOSAVE (EXACT COLUMN NAMES)
 # ─────────────────────────────────────────────────────────────────────────────
 answers = {
-    # metadata (created_at is set in upsert; time_caselevel computed)
-    "time_caselevel": 0.0,  # will be overwritten by collect_payload()
+    "time_caselevel": 0.0,  # overwritten later
 
     # 1) rfdj amounts / complaint
-    "rfdj_demand_amount": st.session_state.get(K("rfdj_demand_amount"), ""),
-    "rfdj_interest_amount": st.session_state.get(K("rfdj_interest_amount"), ""),
-    "rfdj_cost_amount": st.session_state.get(K("rfdj_cost_amount"), ""),
-    "rfdj_attorney_fees_amount": st.session_state.get(K("rfdj_attorney_fees_amount"), ""),
-    "complaint_has_prayer": st.session_state.get(K("complaint_has_prayer"), "Unclear"),
-    "rfdjamount_1": st.session_state.get(K("rfdjamount_1"), "Unclear"),
+    "rfdj_demand_amount": st.session_state.get(K("rfdj_demand_amount")),  # "" if untouched
+    "rfdj_interest_amount": st.session_state.get(K("rfdj_interest_amount")),
+    "rfdj_cost_amount": st.session_state.get(K("rfdj_cost_amount")),
+    "rfdj_attorney_fees_amount": st.session_state.get(K("rfdj_attorney_fees_amount")),
+    "complaint_has_prayer": st.session_state.get(K("complaint_has_prayer")),          # None if untouched
+    "rfdjamount_1": st.session_state.get(K("rfdjamount_1")),
 
     # 2) allegations
-    "allegation_debt_buyer_1": st.session_state.get(K("allegation_debt_buyer_1"), "Unclear"),
-    "allegation_nature_of_debt_2": st.session_state.get(K("allegation_nature_of_debt_2"), "Unclear"),
-    "allegation_sole_owner_3": st.session_state.get(K("allegation_sole_owner_3"), "Unclear"),
+    "allegation_debt_buyer_1": st.session_state.get(K("allegation_debt_buyer_1")),
+    "allegation_nature_of_debt_2": st.session_state.get(K("allegation_nature_of_debt_2")),
+    "allegation_sole_owner_3": st.session_state.get(K("allegation_sole_owner_3")),
 
-    "alleges_chargeoff_balance_4": st.session_state.get(K("alleges_chargeoff_balance_4"), "Unclear"),
-    "alleged_chargeoff_balance_4": st.session_state.get(K("alleged_chargeoff_balance_4"), ""),
+    "alleges_chargeoff_balance_4": st.session_state.get(K("alleges_chargeoff_balance_4")),
+    "alleged_chargeoff_balance_4": st.session_state.get(K("alleged_chargeoff_balance_4")),
 
-    "alleges_last_payment_date_5": st.session_state.get(K("alleges_last_payment_date_5"), "Unclear"),
-    "alleged_last_payment_date_5": st.session_state.get(K("alleged_last_payment_date_5"), ""),
+    "alleges_last_payment_date_5": st.session_state.get(K("alleges_last_payment_date_5")),
+    "alleged_last_payment_date_5": st.session_state.get(K("alleged_last_payment_date_5")),
 
-    "alleges_default_date_5b": st.session_state.get(K("alleges_default_date_5b"), "Unclear"),
-    "alleged_default_date_5b": st.session_state.get(K("alleged_default_date_5b"), ""),
+    "alleges_default_date_5b": st.session_state.get(K("alleges_default_date_5b")),
+    "alleged_default_date_5b": st.session_state.get(K("alleged_default_date_5b")),
 
-    "alleges_chargeoff_creditor_info_6": st.session_state.get(K("alleges_chargeoff_creditor_info_6"), "Unclear"),
-    "alleged_chargeoff_creditor_info_6": st.session_state.get(K("alleged_chargeoff_creditor_info_6"), ""),
+    "alleges_chargeoff_creditor_info_6": st.session_state.get(K("alleges_chargeoff_creditor_info_6")),
+    "alleged_chargeoff_creditor_info_6": st.session_state.get(K("alleged_chargeoff_creditor_info_6")),
 
-    "alleges_debtor_last_known_address_7": st.session_state.get(K("alleges_debtor_last_known_address_7"), "Unclear"),
-    "alleged_debtor_last_known_address_7": st.session_state.get(K("alleged_debtor_last_known_address_7"), ""),
+    "alleges_debtor_last_known_address_7": st.session_state.get(K("alleges_debtor_last_known_address_7")),
+    "alleged_debtor_last_known_address_7": st.session_state.get(K("alleged_debtor_last_known_address_7")),
 
-    "alleges_postchargeoffpurchaserinfo_0": st.session_state.get(K("alleges_postchargeoffpurchaserinfo_0"), "Unclear"),
-    "postchargeoffpurchaserinfo_0": st.session_state.get(K("postchargeoffpurchaserinfo_0"), ""),
+    "alleges_postchargeoffpurchaserinfo_0": st.session_state.get(K("alleges_postchargeoffpurchaserinfo_0")),
+    "postchargeoffpurchaserinfo_0": st.session_state.get(K("postchargeoffpurchaserinfo_0")),
 
-    "allegation_1788_52_compliance": st.session_state.get(K("allegation_1788_52_compliance"), "Unclear"),
+    "allegation_1788_52_compliance": st.session_state.get(K("allegation_1788_52_compliance")),
 
     # 3) agreement in complaint
-    "hascontractorlaststatement_0": st.session_state.get(K("hascontractorlaststatement_0"), "Unclear"),
-    "complaint_agreement_ref": st.session_state.get(K("complaint_agreement_ref"), ""),
+    "hascontractorlaststatement_0": st.session_state.get(K("hascontractorlaststatement_0")),
+    "complaint_agreement_ref": st.session_state.get(K("complaint_agreement_ref")),
 
-    # 4) sworn declaration (dotted key handled during upsert)
-    "hasSignedSworn1788.60_0": st.session_state.get(K("hasSignedSworn1788.60_0"), "Unclear"),
-    "declaration_pkm_present": st.session_state.get(K("declaration_pkm_present"), "Unclear"),
-    "chain_position_number": st.session_state.get(K("chain_position_number"), ""),
-    "declaration_prior_buyers_pkm": st.session_state.get(K("declaration_prior_buyers_pkm"), "Unclear"),
-    "declaration_pkm_refs": st.session_state.get(K("declaration_pkm_refs"), ""),
+    # 4) sworn declaration
+    "hasSignedSworn1788.60_0": st.session_state.get(K("hasSignedSworn1788.60_0")),
+    "declaration_pkm_present": st.session_state.get(K("declaration_pkm_present")),
+    "chain_position_number": st.session_state.get(K("chain_position_number")),
+    "declaration_prior_buyers_pkm": st.session_state.get(K("declaration_prior_buyers_pkm")),
+    "declaration_pkm_refs": st.session_state.get(K("declaration_pkm_refs")),
 
     # 5) agreement in declaration
-    "declaration_has_agreement_proof": st.session_state.get(K("declaration_has_agreement_proof"), "Unclear"),
-    "declaration_agreement_ref": st.session_state.get(K("declaration_agreement_ref"), ""),
+    "declaration_has_agreement_proof": st.session_state.get(K("declaration_has_agreement_proof")),
+    "declaration_agreement_ref": st.session_state.get(K("declaration_agreement_ref")),
 
     # 6) ownership chain
-    "ownership_chain_sufficient": st.session_state.get(K("ownership_chain_sufficient"), "Unclear"),
-    "ownership_chain_account_match": st.session_state.get(K("ownership_chain_account_match"), "Unclear"),
-    "ownership_chain_refs": st.session_state.get(K("ownership_chain_refs"), ""),
+    "ownership_chain_sufficient": st.session_state.get(K("ownership_chain_sufficient")),
+    "ownership_chain_account_match": st.session_state.get(K("ownership_chain_account_match")),
+    "ownership_chain_refs": st.session_state.get(K("ownership_chain_refs")),
 
     # 7–11) checks
-    "haschargeoffbalance_1": st.session_state.get(K("haschargeoffbalance_1"), "Unclear"),
-    "chargeoff_balance_ref": st.session_state.get(K("chargeoff_balance_ref"), ""),
+    "haschargeoffbalance_1": st.session_state.get(K("haschargeoffbalance_1")),
+    "chargeoff_balance_ref": st.session_state.get(K("chargeoff_balance_ref")),
 
-    "lastpaymentdate_1": st.session_state.get(K("lastpaymentdate_1"), "Unclear"),
-    "substantiated_last_payment_date": st.session_state.get(K("substantiated_last_payment_date"), ""),
-    "substantiated_last_payment_ref": st.session_state.get(K("substantiated_last_payment_ref"), ""),
-    "lastpaymentdate_2": st.session_state.get(K("lastpaymentdate_2"), "Unclear"),
+    "lastpaymentdate_1": st.session_state.get(K("lastpaymentdate_1")),
+    "substantiated_last_payment_date": st.session_state.get(K("substantiated_last_payment_date")),
+    "substantiated_last_payment_ref": st.session_state.get(K("substantiated_last_payment_ref")),
+    "lastpaymentdate_2": st.session_state.get(K("lastpaymentdate_2")),
 
-    "chargeoffcreditorinfo_1": st.session_state.get(K("chargeoffcreditorinfo_1"), "Unclear"),
-    "chargeoff_creditor_ref": st.session_state.get(K("chargeoff_creditor_ref"), ""),
+    "chargeoffcreditorinfo_1": st.session_state.get(K("chargeoffcreditorinfo_1")),
+    "chargeoff_creditor_ref": st.session_state.get(K("chargeoff_creditor_ref")),
 
-    "debtorinfo_1": st.session_state.get(K("debtorinfo_1"), "Unclear"),
-    "debtor_info_ref": st.session_state.get(K("debtor_info_ref"), ""),
+    "debtorinfo_1": st.session_state.get(K("debtorinfo_1")),
+    "debtor_info_ref": st.session_state.get(K("debtor_info_ref")),
 
-    "postchargeoffpurchaserinfo_1": st.session_state.get(K("postchargeoffpurchaserinfo_1"), "Unclear"),
-    "post_charge_off_purchaser_refs": st.session_state.get(K("post_charge_off_purchaser_refs"), ""),
+    "postchargeoffpurchaserinfo_1": st.session_state.get(K("postchargeoffpurchaserinfo_1")),
+    "post_charge_off_purchaser_refs": st.session_state.get(K("post_charge_off_purchaser_refs")),
 
     # fees
-    "fees_proof_present": st.session_state.get(K("fees_proof_present"), "Unclear"),
-    "fees_proof_ref": st.session_state.get(K("fees_proof_ref"), ""),
+    "fees_proof_present": st.session_state.get(K("fees_proof_present")),
+    "fees_proof_ref": st.session_state.get(K("fees_proof_ref")),
 
     # final
-    "final_recommendation": st.session_state.get(K("final_recommendation"), "Undecided"),
-    "final_notes": st.session_state.get(K("final_notes"), ""),
+    "final_recommendation": st.session_state.get(K("final_recommendation")),
+    "final_notes": st.session_state.get(K("final_notes")),
 
-    # identity (added at upsert boundary too)
+    # identity
     "case_number": case_number,
     "annotator_id": annotator_id,
 }
+
 st.session_state[f"answers:{case_number}"] = answers  # single source of truth for autosave
 
 # ─────────────────────────────────────────────────────────────────────────────
