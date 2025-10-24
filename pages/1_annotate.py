@@ -398,7 +398,6 @@ if case_number not in st.session_state["case_open_time"]:
 
 
 with st.sidebar:
-    st.markdown("### ⏱️ Time Spent on Case")
 
     @st.fragment(run_every=1)
     def timer_fragment():
@@ -408,10 +407,6 @@ with st.sidebar:
         elapsed = base + (now - opened_at).total_seconds()
         st.session_state["elapsed_seconds_live"] = elapsed
         m, s = divmod(int(elapsed), 60)
-        st.markdown(
-            f"<div style='text-align:center;font-size:44px;font-weight:bold;color:black;font-family:monospace;margin-bottom:15px;'>{m:02d}:{s:02d}</div>",
-            unsafe_allow_html=True,
-        )
     timer_fragment()
 
 
@@ -675,11 +670,16 @@ def you_indicated_block():
 
     # 8) dates
     st.markdown(
-        f"### 8) You indicated that the complaint alleged that the date of last payment was `{item_2e}` "
-        f"and/or that the date of default was `{item_2d}`. A complaint’s filing date is provided on the left sidebar."
+        f"""
+        <h3>8) You indicated that the complaint alleged that the date of last payment was 
+        <code>{item_2e}</code> and/or that the date of default was <code>{item_2d}</code>.
+        A complaint’s filing date is provided on the left sidebar.</h3>
+        """,
+        unsafe_allow_html=True
     )
+
     st.radio(
-        "Is there an exhibit in the declaration that substantiates the date of the defendant's last payment alleged in the complaint (CA Civil Code § 1788.58 (a)(5))?",
+        "Is there an exhibit in the declaration that substantiates the date of the defendant's last payment (or the date of default if no last payment) alleged in the complaint (CA Civil Code § 1788.58 (a)(5))?",
         YES_NO_UNSURE,
         index=YES_NO_UNSURE.index(dget("lastpaymentdate_1", "Unclear")) if dget("lastpaymentdate_1") in YES_NO_UNSURE else 2,
         horizontal=True, key=K("lastpaymentdate_1")
