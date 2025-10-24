@@ -613,7 +613,7 @@ st.radio(
     horizontal=True, key=K("declaration_has_agreement_proof")
 )
 st.text_input(
-    "(st.text) Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in Complaint, 22IWUD01199_87855599, at 17 (Exhibit A)). Otherwise, leave the field blank",
+    "Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in Complaint, 22IWUD01199_87855599, at 17 (Exhibit A)). Otherwise, leave the field blank",
     dget("declaration_agreement_ref"), key=K("declaration_agreement_ref")
 )
 
