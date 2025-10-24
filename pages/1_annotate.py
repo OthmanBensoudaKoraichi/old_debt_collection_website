@@ -613,7 +613,7 @@ st.radio(
     horizontal=True, key=K("declaration_has_agreement_proof")
 )
 st.text_input(
-    "Please indicate the document ID and exhibit number where this proof exists...",
+    "(st.text) Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in Complaint, 22IWUD01199_87855599, at 17 (Exhibit A)). Otherwise, leave the field blank",
     dget("declaration_agreement_ref"), key=K("declaration_agreement_ref")
 )
 
@@ -640,7 +640,7 @@ st.radio(
 
 
 st.text_input(
-    "Please indicate the document ID and exhibit number where this proof exists... Separate entries with semicolons.",
+    "Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in the Declaration, 22IWUD01199_87855599, at 17 (Exhibit A)).  Please separate entries for different pieces of evidence with semicolons.",
     dget("ownership_chain_refs"), key=K("ownership_chain_refs")
 )
 
@@ -664,7 +664,7 @@ def you_indicated_block():
         horizontal=True, key=K("haschargeoffbalance_1")
     )
     st.text_input(
-        "Please indicate the document ID and exhibit number where this proof exists...",
+        "Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in Complaint, 22IWUD01199_87855599, at 17 (Exhibit A)). Otherwise, leave the field blank",
         dget("chargeoff_balance_ref"), key=K("chargeoff_balance_ref")
     )
 
