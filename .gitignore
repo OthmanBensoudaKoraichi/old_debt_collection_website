@@ -50,3 +50,9 @@ Thumbs.db
 *.old
 build/
 dist/
+
+# ─────────────────────────────
+# Confidential files
+# ─────────────────────────────
+/files/cases_assigned.xlsx
+/files/get_plaintiffs_defendants.csv
