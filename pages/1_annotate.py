@@ -689,7 +689,7 @@ def you_indicated_block():
         dget("substantiated_last_payment_date"), key=K("substantiated_last_payment_date")
     )
     st.text_input(
-        "Please indicate the document ID and exhibit number where this proof exists for the previous item.",
+        "Please indicate the document ID and exhibit number where this proof exists for the previous item.  For example, Bill of Sale, attached in the Declaration, 22IWUD01199_87855599, at 17 (Exhibit A)).",
         dget("substantiated_last_payment_ref"), key=K("substantiated_last_payment_ref")
     )
     st.radio(
