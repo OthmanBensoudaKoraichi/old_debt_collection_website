@@ -745,7 +745,7 @@ def you_indicated_block():
         horizontal=True, key=K("postchargeoffpurchaserinfo_1")
     )
     st.text_input(
-        "Please indicate the document ID and exhibit number where this proof exists. Separate entries with semicolons.",
+        "Please indicate the document ID and exhibit number where this proof exists.  For example, Bill of Sale, attached in the Declaration, 22IWUD01199_87855599, at 17 (Exhibit A); Bill of Sale, attached in the Declaration, 22IWUD01199_87855599, at 19 (Exhibit B). ",
         dget("post_charge_off_purchaser_refs"), key=K("post_charge_off_purchaser_refs")
     )
 
