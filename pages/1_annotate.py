@@ -577,33 +577,65 @@ st.text_input(
 )
 
 # 4) Sworn declaration
-st.markdown("### 4) Sworn 1788/585 declaration")
-st.radio(
-    "Is there a sworn declaration document filed in support of the request for default judgment (CA Civil Code § 1788.60 (a))?",
-    YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("hasSignedSworn1788.60_0")) if dget("hasSignedSworn1788.60_0") in YES_NO_UNSURE else None,
-    horizontal=True, key=K("hasSignedSworn1788.60_0")
+st.markdown("### 4) Declarations")
+
+num_creditors_key = K("num_creditors_chain")
+
+if num_creditors_key not in st.session_state:
+    st.session_state[num_creditors_key] = int(dget("num_creditors_chain") or 1)
+
+num_creditors = st.number_input(
+    "Enter the total number of creditors in the chain of title (including the original creditor):",
+    min_value=1, max_value=10, step=1,
+    key=num_creditors_key,
 )
-st.radio(
-    "Please indicate whether a declaration exists from the plaintiff or someone who works for the plaintiff that satisfies the personal knowledge requirement of the records in possession of the plaintiff.",
-    YES_NO_UNSURE,
-    index=YES_NO_UNSURE.index(dget("declaration_pkm_present")) if dget("declaration_pkm_present") in YES_NO_UNSURE else None,
-    horizontal=True, key=K("declaration_pkm_present")
-)
-st.text_input(
-    "Please indicate which number this plaintiff debt buyer is in the chain of title, as evidenced by the exhibits attached to the declaration. The first debt buyer would be the second in the chain of title, as the original seller of the debt would be the first.",
-    dget("chain_position_number"), key=K("chain_position_number")
-)
-st.radio(
-    "If the debt buyer is the third or later in the chain of title, do declarations exist establishing personal knowledge of the business records of all debt buyers?",
-    YES_NO_ONLY12_UNSURE,
-    index=YES_NO_ONLY12_UNSURE.index(dget("declaration_prior_buyers_pkm")) if dget("declaration_prior_buyers_pkm") in YES_NO_ONLY12_UNSURE else None,
-    horizontal=True, key=K("declaration_prior_buyers_pkm")
-)
-st.text_input(
-    "Please indicate the document ID(s) and exhibit number(s) for personal knowledge of prior buyers; separate entries with semicolons.",
-    dget("declaration_pkm_refs"), key=K("declaration_pkm_refs")
-)
+
+st.markdown("_For each creditor in the chain (starting with the current debt-buyer plaintiff), answer the following:_")
+
+for i in range(1, num_creditors + 1):
+    st.markdown(f"#### Creditor #{i}")
+
+    st.radio(
+        f"(1) Does a declaration exist for Creditor #{i}?",
+        YES_NO_UNSURE,
+        index=YES_NO_UNSURE.index(dget(f'decl_exists_{i}'))
+            if dget(f'decl_exists_{i}') in YES_NO_UNSURE else None,
+        horizontal=True, key=K(f'decl_exists_{i}')
+    )
+
+    st.radio(
+        f"(2) Does that declaration satisfy the personal-knowledge requirement?",
+        YES_NO_UNSURE,
+        index=YES_NO_UNSURE.index(dget(f'decl_pkm_{i}'))
+            if dget(f'decl_pkm_{i}') in YES_NO_UNSURE else None,
+        horizontal=True, key=K(f'decl_pkm_{i}')
+    )
+
+    st.radio(
+        f"(3) Is it made under penalty of perjury (CCP § 2015.5)?",
+        YES_NO_UNSURE,
+        index=YES_NO_UNSURE.index(dget(f'decl_perjury_{i}'))
+            if dget(f'decl_perjury_{i}') in YES_NO_UNSURE else None,
+        horizontal=True, key=K(f'decl_perjury_{i}')
+    )
+
+    st.radio(
+        f"(4) Is it made under the laws of California (for example, states execution in California or references California law)?",
+        YES_NO_UNSURE,
+        index=YES_NO_UNSURE.index(dget(f'decl_calaw_{i}'))
+            if dget(f'decl_calaw_{i}') in YES_NO_UNSURE else None,
+        horizontal=True, key=K(f'decl_calaw_{i}')
+    )
+
+    st.text_input(
+        f"Document ID(s) / Exhibit number(s) supporting Creditor #{i}:",
+        dget(f'decl_ref_{i}'),
+        key=K(f'decl_ref_{i}')
+    )
+
+    st.divider()
+
+
 
 # 5) Agreement in declaration
 st.markdown("### 5) Debtor’s agreement to the debt in the declaration")
@@ -806,6 +838,8 @@ save_final = c2.button("✅ Save & Mark Complete", type="primary", use_container
 # ─────────────────────────────────────────────────────────────────────────────
 # STASH ANSWERS FOR AUTOSAVE (EXACT COLUMN NAMES)
 # ─────────────────────────────────────────────────────────────────────────────
+
+
 answers = {
     "time_caselevel": 0.0,  # overwritten later
 
@@ -846,12 +880,6 @@ answers = {
     "hascontractorlaststatement_0": st.session_state.get(K("hascontractorlaststatement_0")),
     "complaint_agreement_ref": st.session_state.get(K("complaint_agreement_ref")),
 
-    # 4) sworn declaration
-    "hasSignedSworn1788.60_0": st.session_state.get(K("hasSignedSworn1788.60_0")),
-    "declaration_pkm_present": st.session_state.get(K("declaration_pkm_present")),
-    "chain_position_number": st.session_state.get(K("chain_position_number")),
-    "declaration_prior_buyers_pkm": st.session_state.get(K("declaration_prior_buyers_pkm")),
-    "declaration_pkm_refs": st.session_state.get(K("declaration_pkm_refs")),
 
     # 5) agreement in declaration
     "declaration_has_agreement_proof": st.session_state.get(K("declaration_has_agreement_proof")),
@@ -892,6 +920,18 @@ answers = {
     "case_number": case_number,
     "annotator_id": annotator_id,
 }
+
+# 4) Sworn declaration (dynamic – up to 10 creditors)
+answers["num_creditors_chain"] = st.session_state.get(K("num_creditors_chain"), 1)
+
+# Loop through creditors and save their fields dynamically
+for i in range(1, 11):  # up to 10, regardless of how many were used
+    answers[f"decl_exists_{i}"] = st.session_state.get(K(f"decl_exists_{i}"))
+    answers[f"decl_pkm_{i}"] = st.session_state.get(K(f"decl_pkm_{i}"))
+    answers[f"decl_perjury_{i}"] = st.session_state.get(K(f"decl_perjury_{i}"))
+    answers[f"decl_calaw_{i}"] = st.session_state.get(K(f"decl_calaw_{i}"))
+    answers[f"decl_ref_{i}"] = st.session_state.get(K(f"decl_ref_{i}"))
+
 
 st.session_state[f"answers:{case_number}"] = answers  # single source of truth for autosave
 
