@@ -826,9 +826,26 @@ st.radio(
     horizontal=True,
     key=K("final_recommendation"),
 )
+
+st.markdown(
+    """
+    **Notes**
+
+    Summarize key items and rationale.
+
+    In addition to your earlier selection, please indicate if this case involved a **major error** under the new coding standards, based on a missing or inadequate declaration from the original creditor or a debt buyer who owned the debt prior to the plaintiff.  
+
+    **- Major Error — Missing or Inadequate Declaration From a Previous Owner of Debt**  
+    **- No major error of this type**
+    """,
+    unsafe_allow_html=False,
+)
+
 st.text_area(
-    "Notes (optional): summarize key items and rationale",
-    dget("final_notes"), key=K("final_notes"), height=120
+    "",
+    value=dget("final_notes"),
+    key=K("final_notes"),
+    height=120,
 )
 
 c1, c2 = st.columns(2)
