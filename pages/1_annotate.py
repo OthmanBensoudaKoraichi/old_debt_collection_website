@@ -337,17 +337,68 @@ if not total:
     st.info("No cases assigned to you.")
     st.stop()
 if current is None:
-    st.success("🎉 All cases completed. Great work!")
-    st.info("Redirecting to completed cases in 2 seconds...")
-    import time
-    time.sleep(2)
-    # Clear any scroll flags before switching
-    st.session_state.pop("scroll_to_top", None)
-    st.session_state.pop("direct_case_mode", None)
-    st.session_state.pop("direct_case_number", None)
-    st.switch_page("pages/2_cases_completed.py")
+    # All cases are complete — keep user on this page and show first case
+    if all_cases:
+        current = all_cases[0]
+    else:
+        st.info("No cases assigned to you.")
+        st.stop()
+
 
 case_number = current["case_number"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CASE NAV BUTTONS (TOP)
+# ─────────────────────────────────────────────────────────────────────────────
+st.markdown(
+    """
+    <style>
+    .case-tabs-row div.stButton > button {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 0.4rem;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .case-tabs-row div.stButton > button[kind="primary"] {
+        background-color: #ff8c42 !important;
+        border-color: #ff8c42 !important;
+        color: white !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+def render_case_nav_buttons():
+    """Show all cases as buttons; current highlighted in orange."""
+    if not all_cases:
+        return
+
+    max_per_row = 12
+    idx = 0
+    while idx < len(all_cases):
+        row_cases = all_cases[idx:idx + max_per_row]
+        cols = st.columns(len(row_cases))
+        st.markdown('<div class="case-tabs-row">', unsafe_allow_html=True)
+        for col, r in zip(cols, row_cases):
+            cn = r["case_number"]
+            is_current = str(cn) == str(case_number)
+            with col:
+                if is_current:
+                    st.button(str(cn), key=f"casebtn_{cn}", type="primary", use_container_width=True)
+                else:
+                    if st.button(str(cn), key=f"casebtn_{cn}", use_container_width=True):
+                        st.session_state["direct_case_mode"] = True
+                        st.session_state["direct_case_number"] = cn
+                        st.session_state["scroll_to_top"] = True
+                        st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+        idx += max_per_row
+
+render_case_nav_buttons()
+
+
 st.sidebar.markdown(f"**Case:** `{case_number}`")
 st.sidebar.markdown("**Plaintiff(s):** " + fmt_party_list(current.get("plaintiff")))
 st.sidebar.markdown("**Defendant(s):** " + fmt_party_list(current.get("defendant")))
@@ -1009,26 +1060,25 @@ if (save_draft or save_final):
 
         if save_final:
             insert_fallback_snapshot(case_number, annotator_id, payload)
-            # Pick next case BEFORE rerun
+
             cases = fetch_cases_for_annotator(annotator_id)
             nxt = get_next_incomplete_or_draft_after(case_number, cases)
+
             if nxt:
+                # Go to next incomplete/draft case
                 st.session_state["direct_case_mode"] = True
                 st.session_state["direct_case_number"] = nxt["case_number"]
-                # one clean rerun; new case renders at the top naturally
-                st.session_state["scroll_to_top"] = True
-                st.rerun()
             else:
-                # No more cases - redirect to completed page
-                st.success("🎉 All cases completed!")
-                import time
-                time.sleep(1)
-                st.session_state.pop("scroll_to_top", None)
-                st.session_state.pop("direct_case_mode", None)
-                st.session_state.pop("direct_case_number", None)
-                st.switch_page("pages/2_cases_completed.py")
+                # All cases complete — wrap to first one
+                if cases:
+                    st.session_state["direct_case_mode"] = True
+                    st.session_state["direct_case_number"] = cases[0]["case_number"]
+
+            st.session_state["scroll_to_top"] = True
+            st.rerun()
         else:
             st.success("Saved ✅ (draft)")
+
     except Exception as e:
         st.error(f"Failed to save: {e}")
 
