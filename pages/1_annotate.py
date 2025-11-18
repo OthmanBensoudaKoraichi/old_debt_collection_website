@@ -20,6 +20,9 @@ if "annotator_id" not in st.session_state:
 
 supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
+# Round courant (1 = première passe, 2 = IAA, etc.)
+current_round = int(st.session_state.get("round", 2))
+
 
 
 direct_mode = st.session_state.get("direct_case_mode", False)
@@ -100,36 +103,42 @@ def normalize_case_row(r: Dict[str, Any]) -> Dict[str, Any]:
         "complaint_filed_date": r.get("complaint_filed_date"),
         "progress": r.get("progress") or "incomplete",
         "annotator_id": r.get("annotator_id"),
+        "round": r.get("round", 1),
     }
+
 
 def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
     """
-    Load all cases for a given annotator_id (lowercase schema).
+    Load all cases for a given annotator_id and the current round.
     """
     res = (
         supabase.table("cases_gold")
         .select("*")
-        .ilike("annotator_id", annotator_id)
+        .ilike("annotator_id", annotator)
+        .eq("round", current_round)
         .order("case_number", desc=False)
         .execute()
     )
     rows = res.data or []
     return [normalize_case_row(r) for r in rows if r.get("case_number")]
 
+
 def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> Optional[Dict[str, Any]]:
     """
-    Load a single case by case_number for the annotator (lowercase schema).
+    Load a single case by case_number for the annotator (lowercase schema) and current round.
     """
     res = (
         supabase.table("cases_gold")
         .select("*")
         .eq("case_number", case_number)
         .ilike("annotator_id", annotator_id)
+        .eq("round", current_round)
         .limit(1)
         .execute()
     )
     rows = res.data or []
     return normalize_case_row(rows[0]) if rows else None
+
 
 def pick_next_incomplete(rows: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """
@@ -177,15 +186,15 @@ def fetch_case_pdfs(case_number: str) -> List[Dict[str, str]]:
 
 def set_case_progress(case_number: str, status: str, annotator: str):
     """
-    Update the progress field on cases_gold (draft/complete) for THIS annotator only.
-    Scoping by (case_number, annotator_id) prevents collisions when multiple annotators share a case.
+    Update the progress field on cases_gold (draft/complete) for THIS annotator and THIS round only.
     """
     try:
         result = (
             supabase.table("cases_gold")
             .update({"progress": status})
             .eq("case_number", case_number)
-            .ilike("annotator_id", annotator_id)
+            .ilike("annotator_id", annotator)
+            .eq("round", current_round)
             .execute()
         )
         if not result.data:
@@ -193,20 +202,23 @@ def set_case_progress(case_number: str, status: str, annotator: str):
     except Exception as e:
         st.error(f"Failed to update case progress: {e}")
 
+
 def load_existing_result(case_number: str, annotator_id: str) -> Dict[str, Any]:
     """
-    Load the most recent result row for (case_number, annotator_id) from results_gold.
+    Load the most recent result row for (case_number, annotator_id, round) from results_gold.
     """
     res = (
         supabase.table("results_gold")
         .select("*")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
+        .eq("round", current_round)
         .order("created_at", desc=True)
         .limit(1)
         .execute()
     )
     return (res.data[0] if res.data else {}) or {}
+
 
 
 def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_final: bool = False):
@@ -215,12 +227,13 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
     - Manual resubmit (is_final=True): insert a new version
     """
 
-    # Fetch latest version for this case + annotator
+    # Fetch latest version for this case + annotator + round
     res = (
         supabase.table("results_gold")
         .select("version")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
+        .eq("round", current_round)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -229,8 +242,6 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
     existing_row = res.data[0] if res.data else None
     last_version = existing_row["version"] if existing_row else 0
 
-    # → Autosave = keep same version (or start at 1 if no row exists)
-    # → Manual submit = increment version
     if is_final:
         version_to_use = last_version + 1
     else:
@@ -239,24 +250,25 @@ def upsert_results_gold(case_number: str, annotator_id: str, payload: dict, is_f
     row = payload.copy()
     row["case_number"] = case_number
     row["annotator_id"] = annotator_id
+    row["round"] = current_round
     row["version"] = version_to_use
     row["created_at"] = now_utc_iso_z()
 
     if is_final or not existing_row:
-        # Manual resubmit OR first-time save → insert new row
         supabase.table("results_gold").insert(row).execute()
     else:
-        # Autosave on existing row → update in place
-        result = supabase.table("results_gold") \
-            .update(row) \
-            .eq("case_number", case_number) \
-            .eq("annotator_id", annotator_id) \
-            .eq("version", last_version) \
+        result = (
+            supabase.table("results_gold")
+            .update(row)
+            .eq("case_number", case_number)
+            .eq("annotator_id", annotator_id)
+            .eq("round", current_round)
+            .eq("version", last_version)
             .execute()
-        
-        # Fallback: if update affected 0 rows, insert instead
+        )
         if not result.data:
             supabase.table("results_gold").insert(row).execute()
+
 
 
 
@@ -290,6 +302,7 @@ def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[
         .select("version")
         .eq("case_number", case_number)
         .eq("annotator_id", annotator_id)
+        .eq("round", current_round)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -299,11 +312,13 @@ def insert_fallback_snapshot(case_number: str, annotator_id: str, payload: Dict[
     row = {
         "case_number": case_number,
         "annotator_id": annotator_id,
+        "round": current_round,
         "version": latest_version,
         "created_at": now_utc_iso_z(),
         **payload,
     }
     supabase.table("results_gold_fallback").insert(row).execute()
+
 
 # If a previous action asked us to scroll on the next run, do it immediately
 if st.session_state.pop("scroll_to_top", False):
@@ -431,10 +446,12 @@ if case_number not in st.session_state["case_elapsed_seconds"]:
             .select("time_caselevel")
             .eq("case_number", case_number)
             .eq("annotator_id", annotator_id)
+            .eq("round", current_round)
             .order("created_at", desc=True)
             .limit(1)
             .execute()
         )
+
         data = res.data[0] if res.data else None
         st.session_state["case_elapsed_seconds"][case_number] = float(data["time_caselevel"]) if (data and data.get("time_caselevel")) else 0.0
     except Exception:
@@ -1013,7 +1030,9 @@ def collect_payload() -> Dict[str, Any]:
     elapsed_total = started_base + (now - opened_at).total_seconds()
     payload = st.session_state.get(f"answers:{case_number}", {}).copy()
     payload["time_caselevel"] = float(elapsed_total)
+    payload["round"] = current_round
     return payload
+
 
 
 
