@@ -22,6 +22,7 @@ supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
 # Round courant (1 = première passe, 2 = IAA, etc.)
 current_round = int(st.session_state.get("round", 2))
+current_batch = int(st.session_state.get("batch", 2))
 
 
 
@@ -116,7 +117,7 @@ def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
         .select("*")
         .ilike("annotator_id", annotator)
         .eq("round", current_round)
-        .eq("batch", 2)  
+        .eq("batch", current_batch)  
         .order("case_number", desc=False)
         .execute()
     )
