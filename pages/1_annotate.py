@@ -21,7 +21,7 @@ if "annotator_id" not in st.session_state:
 supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
 # Round courant (1 = première passe, 2 = IAA, etc.)
-current_round = int(st.session_state.get("round", 1))
+current_round = int(st.session_state.get("round", 2))
 
 
 
