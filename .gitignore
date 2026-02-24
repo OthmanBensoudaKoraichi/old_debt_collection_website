@@ -3,6 +3,20 @@
 # ─────────────────────────────
 .env
 .streamlit/secrets.toml
+credentials.json
+token.pickle
+
+# ─────────────────────────────
+# DATA FILES (LOCAL DATA ONLY)
+# ─────────────────────────────
+files/*.csv
+files/*.xlsx
+files/*.json
+files/*.parquet
+
+# If you want to ignore ALL csv/json everywhere:
+# *.csv
+# *.json
 
 # ─────────────────────────────
 # PYTHON / STREAMLIT FILES
@@ -19,17 +33,15 @@ __pycache__/
 # VIRTUAL ENVIRONMENTS
 # ─────────────────────────────
 venv/
-.env/
 .venv/
 env/
 ENV/
 env.bak/
 
 # ─────────────────────────────
-# JUPYTER / NOTEBOOKS
+# JUPYTER
 # ─────────────────────────────
 .ipynb_checkpoints/
-*.ipynb_checkpoints/
 
 # ─────────────────────────────
 # OS / EDITOR FILES
@@ -40,7 +52,7 @@ Thumbs.db
 .idea/
 
 # ─────────────────────────────
-# DEPLOYMENT / BUILD FILES
+# BUILD / EXPORTS
 # ─────────────────────────────
 *.tar
 *.zip
@@ -52,9 +64,8 @@ build/
 dist/
 
 # ─────────────────────────────
-# Confidential files
+# CREDENTIALS (extra safety)
 # ─────────────────────────────
-/files/cases_assigned.xlsx
-/files/get_plaintiffs_defendants.csv
-/files/get_plaintiffs_defendants_initial_100.csv
-/files/batch_2_case_assignments.xlsx
+*.key
+*.pem
+*.crt
