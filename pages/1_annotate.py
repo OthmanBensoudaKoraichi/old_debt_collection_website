@@ -333,7 +333,15 @@ if st.session_state.pop("scroll_to_top", False):
 # ─────────────────────────────────────────────────────────────────────────────
 all_cases = fetch_cases_for_annotator(annotator_id)
 total = len(all_cases)
-done = sum(1 for r in all_cases if (r.get("progress") or "").lower() == "complete")
+completed_res = (
+    supabase.table("results_gold")
+    .select("case_number")
+    .eq("annotator_id", annotator_id)
+    .eq("round", current_round)
+    .execute()
+)
+completed_case_numbers = {r["case_number"] for r in (completed_res.data or [])}
+done = sum(1 for r in all_cases if r["case_number"] in completed_case_numbers)
 left = total - done
 
 if direct_mode and direct_case_number:
@@ -342,7 +350,8 @@ if direct_mode and direct_case_number:
         st.error(f"Case '{direct_case_number}' not found or not assigned to '{annotator_id}'.")
         st.stop()
 else:
-    current = pick_next_incomplete(all_cases)
+    current = next((r for r in all_cases if r["case_number"] not in completed_case_numbers), None)
+
 
 st.sidebar.markdown(f"**Annotator:** `{annotator_id}`")
 st.sidebar.metric("Completed", done)
