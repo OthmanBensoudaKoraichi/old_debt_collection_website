@@ -21,8 +21,8 @@ if "annotator_id" not in st.session_state:
 supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
 # Round courant (1 = première passe, 2 = IAA, etc.)
-current_round = int(st.session_state.get("round", 1))
-current_batch = int(st.session_state.get("batch", 3))
+current_round = int(st.session_state.get("round", 3))
+#current_batch = int(st.session_state.get("batch", 3))
 
 
 
@@ -117,7 +117,7 @@ def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
         .select("*")
         .ilike("annotator_id", annotator)
         .eq("round", current_round)
-        .eq("batch", current_batch)  
+      #  .eq("batch", current_batch)  
         .order("case_number", desc=False)
         .execute()
     )
@@ -135,7 +135,7 @@ def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> O
         .eq("case_number", case_number)
         .ilike("annotator_id", annotator_id)
         .eq("round", current_round)
-        .eq("batch", current_batch)  
+        #.eq("batch", current_batch)  
         .limit(1)
         .execute()
     )
