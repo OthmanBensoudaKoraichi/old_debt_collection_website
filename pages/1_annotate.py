@@ -161,19 +161,24 @@ def _read_drive_row(r: Dict[str, Any]) -> Dict[str, str]:
             or r.get("DOCUMENT_NAME_DRIVE")
             or r.get("Document_Name_Drive")
             or "Document").strip()
-    return {"name": name or "Document", "link": link}
+    doc_id = (r.get("document_id")
+              or r.get("DOCUMENT_ID")
+              or r.get("Document_Id")
+              or "")
+    doc_id = str(doc_id).strip()
+    return {"name": name or "Document", "link": link, "document_id": doc_id}
 
 
 def fetch_case_pdfs(case_number: str) -> List[Dict[str, Any]]:
     """
-    Return [{name, link, extra}] for case documents.
-    Docs in `gdrive_files` have extra=False; docs only in `gdrive_files_all` have extra=True.
+    Return [{name, link, document_id, extra}] for case documents.
+    Docs in `gdrive_files` have extra=False; docs only in `gdrive_files_all` (by document_id) have extra=True.
     """
     def _fetch(table: str) -> List[Dict[str, str]]:
         try:
             res = (
                 supabase.table(table)
-                .select("CASE_NUMBER, LINK_DRIVE, DOCUMENT_NAME_DRIVE")
+                .select("CASE_NUMBER, LINK_DRIVE, DOCUMENT_NAME_DRIVE, DOCUMENT_ID")
                 .eq("CASE_NUMBER", case_number)
                 .execute()
             )
@@ -191,8 +196,8 @@ def fetch_case_pdfs(case_number: str) -> List[Dict[str, Any]]:
     primary = _fetch("gdrive_files")
     all_docs = _fetch("gdrive_files_all")
 
-    primary_links = {d["link"] for d in primary}
-    extras = [d for d in all_docs if d["link"] not in primary_links]
+    primary_ids = {d["document_id"] for d in primary if d["document_id"]}
+    extras = [d for d in all_docs if d["document_id"] and d["document_id"] not in primary_ids]
 
     return (
         [{**d, "extra": False} for d in primary]
