@@ -152,39 +152,52 @@ def pick_next_incomplete(rows: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]
             return r
     return None
 
-def fetch_case_pdfs(case_number: str) -> List[Dict[str, str]]:
-    """
-    Return [{name, link}] for case documents in gdrive_files.
-    Columns in Supabase are lowercase (unless quoted), so select them in lowercase.
-    Also tolerate unexpected casing by falling back to alternative keys.
-    """
-    try:
-        res = (
-            supabase.table("gdrive_files")
-            .select("CASE_NUMBER, LINK_DRIVE, DOCUMENT_NAME_DRIVE")
-            .eq("CASE_NUMBER", case_number)
-            .execute()
-        )
-        rows = res.data or []
-    except Exception as e:
-        # Surface the error in the UI once so it's debuggable
-        st.sidebar.caption(f"⚠️ Could not load Drive docs: {e}")
-        rows = []
+def _read_drive_row(r: Dict[str, Any]) -> Dict[str, str]:
+    link = (r.get("link_drive")
+            or r.get("LINK_DRIVE")
+            or r.get("Link_Drive")
+            or "").strip()
+    name = (r.get("document_name_drive")
+            or r.get("DOCUMENT_NAME_DRIVE")
+            or r.get("Document_Name_Drive")
+            or "Document").strip()
+    return {"name": name or "Document", "link": link}
 
-    out: List[Dict[str, str]] = []
-    for r in rows:
-        # Be defensive about key names just in case the table was created with quoted columns
-        link = (r.get("link_drive")
-                or r.get("LINK_DRIVE")
-                or r.get("Link_Drive")
-                or "").strip()
-        name = (r.get("document_name_drive")
-                or r.get("DOCUMENT_NAME_DRIVE")
-                or r.get("Document_Name_Drive")
-                or "Document").strip()
-        if link:
-            out.append({"name": name or "Document", "link": link})
-    return out
+
+def fetch_case_pdfs(case_number: str) -> List[Dict[str, Any]]:
+    """
+    Return [{name, link, extra}] for case documents.
+    Docs in `gdrive_files` have extra=False; docs only in `gdrive_files_all` have extra=True.
+    """
+    def _fetch(table: str) -> List[Dict[str, str]]:
+        try:
+            res = (
+                supabase.table(table)
+                .select("CASE_NUMBER, LINK_DRIVE, DOCUMENT_NAME_DRIVE")
+                .eq("CASE_NUMBER", case_number)
+                .execute()
+            )
+            rows = res.data or []
+        except Exception as e:
+            st.sidebar.caption(f"⚠️ Could not load Drive docs from {table}: {e}")
+            rows = []
+        out = []
+        for r in rows:
+            d = _read_drive_row(r)
+            if d["link"]:
+                out.append(d)
+        return out
+
+    primary = _fetch("gdrive_files")
+    all_docs = _fetch("gdrive_files_all")
+
+    primary_links = {d["link"] for d in primary}
+    extras = [d for d in all_docs if d["link"] not in primary_links]
+
+    return (
+        [{**d, "extra": False} for d in primary]
+        + [{**d, "extra": True} for d in extras]
+    )
 
 
 def set_case_progress(case_number: str, status: str, annotator: str):
@@ -426,10 +439,17 @@ files = fetch_case_pdfs(case_number)
 if files:
     st.sidebar.markdown("**Google Drive Documents:**")
     for d in files:
-        try:
-            st.sidebar.link_button(d["name"], d["link"], use_container_width=True)
-        except Exception:
-            st.sidebar.markdown(f"- [{d['name']}]({d['link']})")
+        if d.get("extra"):
+            st.sidebar.markdown(
+                f"- :orange[[{d['name']}]({d['link']})]"
+            )
+        else:
+            try:
+                st.sidebar.link_button(d["name"], d["link"], use_container_width=True)
+            except Exception:
+                st.sidebar.markdown(f"- [{d['name']}]({d['link']})")
+    if any(d.get("extra") for d in files):
+        st.sidebar.caption("🟧 Orange = present in `gdrive_files_all` but not in `gdrive_files`.")
 else:
     st.sidebar.caption("No documents found for this case.")
 st.sidebar.caption("ℹ️ Note: Document names shown here correspond exactly to the file names in Google Drive.")
