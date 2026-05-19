@@ -21,7 +21,7 @@ if "annotator_id" not in st.session_state:
 supabase = st.session_state["supabase"]
 annotator_id = st.session_state["annotator_id"]
 # Round courant (1 = première passe, 2 = IAA, etc.)
-current_round = int(st.session_state.get("round", 1))
+current_round = int(st.session_state.get("round", 9999))
 #current_batch = int(st.session_state.get("batch", 3))
 
 
@@ -110,14 +110,14 @@ def normalize_case_row(r: Dict[str, Any]) -> Dict[str, Any]:
 
 def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
     """
-    Load all cases for a given annotator_id and the current round.
+    Load all recoding cases for a given annotator_id and the current round.
     """
     res = (
         supabase.table("cases_gold")
         .select("*")
         .ilike("annotator_id", annotator)
         .eq("round", current_round)
-      #  .eq("batch", current_batch)  
+        .eq("recoding", 1)
         .order("case_number", desc=False)
         .execute()
     )
@@ -127,7 +127,7 @@ def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
 
 def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> Optional[Dict[str, Any]]:
     """
-    Load a single case by case_number for the annotator (lowercase schema) and current round.
+    Load a single recoding case by case_number for the annotator and current round.
     """
     res = (
         supabase.table("cases_gold")
@@ -135,7 +135,7 @@ def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> O
         .eq("case_number", case_number)
         .ilike("annotator_id", annotator_id)
         .eq("round", current_round)
-        #.eq("batch", current_batch)  
+        .eq("recoding", 1)
         .limit(1)
         .execute()
     )
@@ -216,6 +216,7 @@ def set_case_progress(case_number: str, status: str, annotator: str):
             .eq("case_number", case_number)
             .ilike("annotator_id", annotator)
             .eq("round", current_round)
+            .eq("recoding", 1)
             .execute()
         )
         if not result.data:
