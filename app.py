@@ -24,14 +24,14 @@ st.title("Debt Collection – Gold Label Annotation")
 # ─────────────────────────────────────────────────────────────────────────────
 def _fetch_cases_for_annotator(annotator_id: str) -> List[Dict[str, Any]]:
     """Fetch all recoding cases assigned to this annotator from cases_gold."""
-    res = (
+    q = (
         supabase.table("cases_gold")
         .select("*")
         .ilike("annotator_id", annotator_id)
-        .eq("recoding", 1)
-        .execute()
     )
-    return res.data or []
+    if annotator_id.strip().lower() != "master":
+        q = q.eq("recoding", 1)
+    return q.execute().data or []
 
 def _rows_to_assigned_cases(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Normalize cases into [{'case_id': '...', 'branch': None}] format."""

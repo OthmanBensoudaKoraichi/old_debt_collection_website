@@ -112,16 +112,15 @@ def fetch_cases_for_annotator(annotator: str) -> List[Dict[str, Any]]:
     """
     Load all recoding cases for a given annotator_id and the current round.
     """
-    res = (
+    q = (
         supabase.table("cases_gold")
         .select("*")
         .ilike("annotator_id", annotator)
         .eq("round", current_round)
-        .eq("recoding", 1)
-        .order("case_number", desc=False)
-        .execute()
     )
-    rows = res.data or []
+    if annotator.strip().lower() != "master":
+        q = q.eq("recoding", 1)
+    rows = q.order("case_number", desc=False).execute().data or []
     return [normalize_case_row(r) for r in rows if r.get("case_number")]
 
 
@@ -129,17 +128,16 @@ def fetch_case_by_number_for_annotator(annotator_id: str, case_number: str) -> O
     """
     Load a single recoding case by case_number for the annotator and current round.
     """
-    res = (
+    q = (
         supabase.table("cases_gold")
         .select("*")
         .eq("case_number", case_number)
         .ilike("annotator_id", annotator_id)
         .eq("round", current_round)
-        .eq("recoding", 1)
-        .limit(1)
-        .execute()
     )
-    rows = res.data or []
+    if annotator_id.strip().lower() != "master":
+        q = q.eq("recoding", 1)
+    rows = q.limit(1).execute().data or []
     return normalize_case_row(rows[0]) if rows else None
 
 
@@ -210,15 +208,16 @@ def set_case_progress(case_number: str, status: str, annotator: str):
     Update the progress field on cases_gold (draft/complete) for THIS annotator and THIS round only.
     """
     try:
-        result = (
+        q = (
             supabase.table("cases_gold")
             .update({"progress": status})
             .eq("case_number", case_number)
             .ilike("annotator_id", annotator)
             .eq("round", current_round)
-            .eq("recoding", 1)
-            .execute()
         )
+        if annotator.strip().lower() != "master":
+            q = q.eq("recoding", 1)
+        result = q.execute()
         if not result.data:
             st.warning(f"Progress update affected 0 rows for case {case_number}")
     except Exception as e:
